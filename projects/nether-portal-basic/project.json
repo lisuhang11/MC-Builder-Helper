@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "id": "nether-portal-basic",
+  "title": "下界传送门（基础）",
+  "description": "用黑曜石搭 4×5 完整门框，再点亮门内空间。角落保留，共 14 块黑曜石。",
+  "edition": "java",
+  "versions": ["1.7.10", "1.8", "1.12", "1.16", "1.20"],
+  "origin": [0, 0, 0],
+  "author": "内置课程"
+}

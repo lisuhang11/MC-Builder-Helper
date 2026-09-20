@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "id": "cobble-gen-double",
+  "title": "双道刷石机",
+  "description": "两条并排的刷石槽，一次能挖两块圆石。结构和一线相同：先围槽，先水后岩浆。",
+  "edition": "java",
+  "versions": ["1.7.10", "1.8", "1.12", "1.16", "1.20"],
+  "origin": [0, 0, 0],
+  "author": "内置课程"
+}

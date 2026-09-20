@@ -1,0 +1,309 @@
+import { ensureNamespace, stripNamespace } from "./flattening.ts";
+
+const WOOD: Record<string, string> = {
+  oak: "橡木",
+  spruce: "云杉木",
+  birch: "白桦木",
+  jungle: "丛林木",
+  acacia: "金合欢木",
+  dark_oak: "深色橡木",
+  mangrove: "红树木",
+  cherry: "樱花木",
+  bamboo: "竹",
+  crimson: "绯红木",
+  warped: "诡异木",
+  pale_oak: "苍白橡木",
+};
+
+const COLOR: Record<string, string> = {
+  white: "白色",
+  light_gray: "淡灰色",
+  gray: "灰色",
+  black: "黑色",
+  brown: "棕色",
+  red: "红色",
+  orange: "橙色",
+  yellow: "黄色",
+  lime: "黄绿色",
+  green: "绿色",
+  cyan: "青色",
+  light_blue: "淡蓝色",
+  blue: "蓝色",
+  purple: "紫色",
+  magenta: "品红色",
+  pink: "粉红色",
+};
+
+const EXACT: Record<string, string> = {
+  air: "空气",
+  stone: "石头",
+  granite: "花岗岩",
+  polished_granite: "磨制花岗岩",
+  diorite: "闪长岩",
+  polished_diorite: "磨制闪长岩",
+  andesite: "安山岩",
+  polished_andesite: "磨制安山岩",
+  deepslate: "深板岩",
+  cobbled_deepslate: "深板岩圆石",
+  grass_block: "草方块",
+  dirt: "泥土",
+  coarse_dirt: "砂土",
+  podzol: "灰化土",
+  rooted_dirt: "缠根泥土",
+  mud: "泥巴",
+  cobblestone: "圆石",
+  bedrock: "基岩",
+  sand: "沙子",
+  red_sand: "红沙",
+  gravel: "沙砾",
+  clay: "黏土",
+  obsidian: "黑曜石",
+  crying_obsidian: "哭泣的黑曜石",
+  nether_portal: "下界传送门",
+  end_portal: "末地传送门",
+  end_portal_frame: "末地传送门框架",
+  fire: "火",
+  soul_fire: "灵魂火",
+  water: "水",
+  lava: "熔岩",
+  ice: "冰",
+  packed_ice: "浮冰",
+  blue_ice: "蓝冰",
+  snow: "雪",
+  snow_block: "雪块",
+  glass: "玻璃",
+  glass_pane: "玻璃板",
+  tinted_glass: "遮光玻璃",
+  torch: "火把",
+  soul_torch: "灵魂火把",
+  lantern: "灯笼",
+  soul_lantern: "灵魂灯笼",
+  glowstone: "荧石",
+  sea_lantern: "海晶灯",
+  shroomlight: "菌光体",
+  crafting_table: "工作台",
+  furnace: "熔炉",
+  blast_furnace: "高炉",
+  smoker: "烟熏炉",
+  chest: "箱子",
+  barrel: "木桶",
+  hopper: "漏斗",
+  dispenser: "发射器",
+  dropper: "投掷器",
+  piston: "活塞",
+  sticky_piston: "黏性活塞",
+  observer: "观察者",
+  lever: "拉杆",
+  repeater: "红石中继器",
+  comparator: "红石比较器",
+  redstone_wire: "红石粉",
+  redstone_torch: "红石火把",
+  redstone_block: "红石块",
+  redstone_lamp: "红石灯",
+  target: "标靶",
+  note_block: "音符盒",
+  lectern: "讲台",
+  bookshelf: "书架",
+  enchanting_table: "附魔台",
+  anvil: "铁砧",
+  grindstone: "砂轮",
+  smithing_table: "锻造台",
+  cartography_table: "制图台",
+  fletching_table: "制箭台",
+  loom: "织布机",
+  composter: "堆肥桶",
+  cauldron: "炼药锅",
+  brewing_stand: "酿造台",
+  ladder: "梯子",
+  scaffolding: "脚手架",
+  vine: "藤蔓",
+  lily_pad: "睡莲",
+  cactus: "仙人掌",
+  sugar_cane: "甘蔗",
+  bamboo: "竹子",
+  kelp: "海带",
+  hay_block: "干草块",
+  melon: "西瓜",
+  pumpkin: "南瓜",
+  carved_pumpkin: "雕刻过的南瓜",
+  jack_o_lantern: "南瓜灯",
+  netherrack: "下界岩",
+  soul_sand: "灵魂沙",
+  soul_soil: "灵魂土",
+  magma_block: "岩浆块",
+  blackstone: "黑石",
+  gilded_blackstone: "镶金黑石",
+  basalt: "玄武岩",
+  polished_basalt: "磨制玄武岩",
+  smooth_basalt: "平滑玄武岩",
+  nether_bricks: "下界砖块",
+  red_nether_bricks: "红色下界砖块",
+  nether_wart_block: "下界疣块",
+  warped_wart_block: "诡异疣块",
+  end_stone: "末地石",
+  end_stone_bricks: "末地石砖",
+  purpur_block: "紫珀块",
+  purpur_pillar: "紫珀柱",
+  chorus_flower: "紫颂花",
+  chorus_plant: "紫颂植株",
+  bricks: "砖块",
+  stone_bricks: "石砖",
+  mossy_stone_bricks: "苔石砖",
+  cracked_stone_bricks: "裂纹石砖",
+  chiseled_stone_bricks: "錾制石砖",
+  mossy_cobblestone: "苔石",
+  sandstone: "砂岩",
+  red_sandstone: "红砂岩",
+  smooth_stone: "平滑石头",
+  calcite: "方解石",
+  tuff: "凝灰岩",
+  dripstone_block: "滴水石块",
+  pointed_dripstone: "滴水石锥",
+  amethyst_block: "紫水晶块",
+  budding_amethyst: "紫水晶母岩",
+  copper_block: "铜块",
+  cut_copper: "切制铜块",
+  exposed_copper: "斑驳的铜块",
+  weathered_copper: "锈蚀的铜块",
+  oxidized_copper: "氧化的铜块",
+  iron_block: "铁块",
+  gold_block: "金块",
+  diamond_block: "钻石块",
+  emerald_block: "绿宝石块",
+  lapis_block: "青金石块",
+  coal_block: "煤炭块",
+  netherite_block: "下界合金块",
+  raw_iron_block: "粗铁块",
+  raw_gold_block: "粗金块",
+  raw_copper_block: "粗铜块",
+  iron_bars: "铁栏杆",
+  iron_door: "铁门",
+  iron_trapdoor: "铁活板门",
+  chain: "锁链",
+  rail: "铁轨",
+  powered_rail: "动力铁轨",
+  detector_rail: "探测铁轨",
+  activator_rail: "激活铁轨",
+  tnt: "TNT",
+  sponge: "海绵",
+  wet_sponge: "湿海绵",
+  slime_block: "黏液块",
+  honey_block: "蜂蜜块",
+  honeycomb_block: "蜜脾块",
+  bone_block: "骨块",
+  quartz_block: "石英块",
+  smooth_quartz: "平滑石英块",
+  chiseled_quartz_block: "錾制石英块",
+  quartz_pillar: "石英柱",
+  ancient_debris: "远古残骸",
+  respawn_anchor: "重生锚",
+  lodestone: "磁石",
+  bell: "钟",
+  campfire: "营火",
+  soul_campfire: "灵魂营火",
+  dirt_path: "土径",
+  farmland: "耕地",
+  grass: "草",
+  short_grass: "矮草",
+  tall_grass: "高草",
+  fern: "蕨",
+  dead_bush: "枯灌木",
+  moss_block: "苔藓块",
+  moss_carpet: "苔藓地毯",
+  azalea: "杜鹃花丛",
+  flowering_azalea: "盛开的杜鹃花丛",
+  terracotta: "陶瓦",
+  packed_mud: "泥坯",
+  mud_bricks: "泥砖",
+};
+
+const ORE: Record<string, string> = {
+  coal: "煤矿石",
+  iron: "铁矿石",
+  copper: "铜矿石",
+  gold: "金矿石",
+  redstone: "红石矿石",
+  emerald: "绿宝石矿石",
+  lapis: "青金石矿石",
+  diamond: "钻石矿石",
+  nether_gold: "下界金矿石",
+  nether_quartz: "下界石英矿石",
+};
+
+function woodOf(id: string): string | null {
+  const keys = Object.keys(WOOD).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (id === key || id.startsWith(`${key}_`)) return WOOD[key];
+  }
+  return null;
+}
+
+const SUFFIX: [string, (stem: string) => string | null][] = [
+  ["_planks", (stem) => (woodOf(stem) ? `${woodOf(stem)}木板` : `${stem}木板`)],
+  ["_log", (stem) => (woodOf(stem) ? `${woodOf(stem)}原木` : `${stem}原木`)],
+  ["_wood", (stem) => (woodOf(stem) ? `${woodOf(stem)}木材` : `${stem}木材`)],
+  ["_stem", (stem) => (woodOf(stem) ? `${woodOf(stem)}菌柄` : `${stem}菌柄`)],
+  ["_hyphae", (stem) => (woodOf(stem) ? `${woodOf(stem)}菌核` : `${stem}菌核`)],
+  ["_leaves", (stem) => (woodOf(stem) ? `${woodOf(stem)}树叶` : `${stem}树叶`)],
+  ["_sapling", (stem) => (woodOf(stem) ? `${woodOf(stem)}树苗` : `${stem}树苗`)],
+  ["_stairs", (stem) => {
+    if (woodOf(stem)) return `${woodOf(stem)}楼梯`;
+    if (EXACT[stem]) return `${EXACT[stem]}楼梯`;
+    return `${stem}楼梯`;
+  }],
+  ["_slab", (stem) => {
+    if (woodOf(stem)) return `${woodOf(stem)}台阶`;
+    if (EXACT[stem]) return `${EXACT[stem]}台阶`;
+    return `${stem}台阶`;
+  }],
+  ["_door", (stem) => (woodOf(stem) ? `${woodOf(stem)}门` : `${stem}门`)],
+  ["_trapdoor", (stem) => (woodOf(stem) ? `${woodOf(stem)}活板门` : `${stem}活板门`)],
+  ["_fence_gate", (stem) => (woodOf(stem) ? `${woodOf(stem)}栅栏门` : `${stem}栅栏门`)],
+  ["_fence", (stem) => (woodOf(stem) ? `${woodOf(stem)}栅栏` : `${stem}栅栏`)],
+  ["_button", (stem) => (woodOf(stem) ? `${woodOf(stem)}按钮` : `${stem}按钮`)],
+  ["_pressure_plate", (stem) => (woodOf(stem) ? `${woodOf(stem)}压力板` : `${stem}压力板`)],
+  ["_sign", (stem) => (woodOf(stem) ? `${woodOf(stem)}告示牌` : `${stem}告示牌`)],
+  ["_hanging_sign", (stem) => (woodOf(stem) ? `${woodOf(stem)}悬挂式告示牌` : `${stem}悬挂式告示牌`)],
+  ["_wall", (stem) => (EXACT[stem] ? `${EXACT[stem]}墙` : `${stem}墙`)],
+  ["_carpet", (stem) => (COLOR[stem] ? `${COLOR[stem]}地毯` : `${stem}地毯`)],
+  ["_wool", (stem) => (COLOR[stem] ? `${COLOR[stem]}羊毛` : `${stem}羊毛`)],
+  ["_concrete_powder", (stem) => (COLOR[stem] ? `${COLOR[stem]}混凝土粉末` : `${stem}混凝土粉末`)],
+  ["_concrete", (stem) => (COLOR[stem] ? `${COLOR[stem]}混凝土` : `${stem}混凝土`)],
+  ["_terracotta", (stem) => (COLOR[stem] ? `${COLOR[stem]}陶瓦` : `${stem}陶瓦`)],
+  ["_stained_glass_pane", (stem) => (COLOR[stem] ? `${COLOR[stem]}染色玻璃板` : `${stem}染色玻璃板`)],
+  ["_stained_glass", (stem) => (COLOR[stem] ? `${COLOR[stem]}染色玻璃` : `${stem}染色玻璃`)],
+  ["_bed", (stem) => (COLOR[stem] ? `${COLOR[stem]}床` : `${stem}床`)],
+  ["_shulker_box", (stem) => (COLOR[stem] ? `${COLOR[stem]}潜影盒` : "潜影盒")],
+  ["_candle", (stem) => (COLOR[stem] ? `${COLOR[stem]}蜡烛` : `${stem}蜡烛`)],
+  ["_glazed_terracotta", (stem) => (COLOR[stem] ? `${COLOR[stem]}带釉陶瓦` : `${stem}带釉陶瓦`)],
+  ["_ore", (stem) => {
+    if (stem.startsWith("deepslate_")) return `深层${ORE[stem.slice(10)] ?? stem.slice(10) + "矿石"}`;
+    return ORE[stem] ?? `${stem}矿石`;
+  }],
+];
+
+function patternName(id: string): string | null {
+  if (id.startsWith("stripped_")) {
+    const rest = id.slice("stripped_".length);
+    const inner = patternName(rest) ?? EXACT[rest];
+    return inner ? `去皮${inner}` : null;
+  }
+  const suffixes = SUFFIX.sort((a, b) => b[0].length - a[0].length);
+  for (const [suf, fn] of suffixes) {
+    if (id.endsWith(suf) && id.length > suf.length) {
+      const stem = id.slice(0, -suf.length);
+      const out = fn(stem);
+      if (out) return out;
+    }
+  }
+  return null;
+}
+
+/** 给玩家看的方块中文名。IR 里仍用 minecraft: 英文 ID。 */
+export function blockDisplayNameZh(name: string): string {
+  const id = stripNamespace(ensureNamespace(name));
+  if (EXACT[id]) return EXACT[id];
+  const patterned = patternName(id);
+  if (patterned) return patterned;
+  return id.replace(/_/g, " ");
+}

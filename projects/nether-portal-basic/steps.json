@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "groups": [
+    {
+      "id": "base",
+      "title": "铺底边",
+      "steps": [
+        { "op": "place", "pos": [0, 0, 0], "block": { "name": "minecraft:obsidian", "state": {} }, "note": "门框左下角" },
+        { "op": "place", "pos": [1, 0, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [2, 0, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [3, 0, 0], "block": { "name": "minecraft:obsidian", "state": {} }, "note": "门框右下角" }
+      ]
+    },
+    {
+      "id": "columns",
+      "title": "立两侧柱",
+      "steps": [
+        { "op": "place", "pos": [0, 1, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [3, 1, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [0, 2, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [3, 2, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [0, 3, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [3, 3, 0], "block": { "name": "minecraft:obsidian", "state": {} } }
+      ]
+    },
+    {
+      "id": "lintel",
+      "title": "封顶",
+      "steps": [
+        { "op": "place", "pos": [0, 4, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [1, 4, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [2, 4, 0], "block": { "name": "minecraft:obsidian", "state": {} } },
+        { "op": "place", "pos": [3, 4, 0], "block": { "name": "minecraft:obsidian", "state": {} } }
+      ]
+    },
+    {
+      "id": "light",
+      "title": "点亮门面",
+      "steps": [
+        { "op": "place", "pos": [1, 1, 0], "block": { "name": "minecraft:nether_portal", "state": {} }, "note": "游戏里对框使用打火石；这里直接放置门方块" },
+        { "op": "place", "pos": [2, 1, 0], "block": { "name": "minecraft:nether_portal", "state": {} } },
+        { "op": "place", "pos": [1, 2, 0], "block": { "name": "minecraft:nether_portal", "state": {} } },
+        { "op": "place", "pos": [2, 2, 0], "block": { "name": "minecraft:nether_portal", "state": {} } },
+        { "op": "place", "pos": [1, 3, 0], "block": { "name": "minecraft:nether_portal", "state": {} } },
+        { "op": "place", "pos": [2, 3, 0], "block": { "name": "minecraft:nether_portal", "state": {} } }
+      ]
+    }
+  ]
+}

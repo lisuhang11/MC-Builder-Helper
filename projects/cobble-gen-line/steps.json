@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "groups": [
+    {
+      "id": "floor",
+      "title": "铺槽底",
+      "steps": [
+        { "op": "place", "pos": [1, 0, 0], "block": { "name": "minecraft:cobblestone", "state": {} }, "note": "水、刷石口、岩浆都坐在这一排底上" },
+        { "op": "place", "pos": [2, 0, 0], "block": { "name": "minecraft:cobblestone", "state": {} } },
+        { "op": "place", "pos": [3, 0, 0], "block": { "name": "minecraft:cobblestone", "state": {} } }
+      ]
+    },
+    {
+      "id": "walls",
+      "title": "围一格深的槽",
+      "steps": [
+        { "op": "place", "pos": [0, 1, 0], "block": { "name": "minecraft:cobblestone", "state": {} }, "note": "堵住水的后端，不然水会流走" },
+        { "op": "place", "pos": [4, 1, 0], "block": { "name": "minecraft:cobblestone", "state": {} }, "note": "堵住岩浆的后端" },
+        { "op": "place", "pos": [1, 1, -1], "block": { "name": "minecraft:cobblestone", "state": {} } },
+        { "op": "place", "pos": [2, 1, -1], "block": { "name": "minecraft:cobblestone", "state": {} } },
+        { "op": "place", "pos": [3, 1, -1], "block": { "name": "minecraft:cobblestone", "state": {} } },
+        { "op": "place", "pos": [1, 1, 1], "block": { "name": "minecraft:cobblestone", "state": {} } },
+        { "op": "place", "pos": [2, 1, 1], "block": { "name": "minecraft:cobblestone", "state": {} } },
+        { "op": "place", "pos": [3, 1, 1], "block": { "name": "minecraft:cobblestone", "state": {} } }
+      ]
+    },
+    {
+      "id": "water",
+      "title": "先倒水",
+      "steps": [
+        { "op": "place", "pos": [1, 1, 0], "block": { "name": "minecraft:water", "state": {} }, "note": "水放在槽的一头，会向中间流。一定先水后岩浆，反过来会变成黑曜石" }
+      ]
+    },
+    {
+      "id": "lava",
+      "title": "再倒岩浆",
+      "steps": [
+        { "op": "place", "pos": [3, 1, 0], "block": { "name": "minecraft:lava", "state": {} }, "note": "岩浆放在另一头，和流水在中间相遇" }
+      ]
+    },
+    {
+      "id": "cobble",
+      "title": "中间刷出圆石",
+      "steps": [
+        { "op": "place", "pos": [2, 1, 0], "block": { "name": "minecraft:cobblestone", "state": {} }, "note": "站在槽边挖掉这块圆石，它会再刷出来。别挖到底和两边的围墙" }
+      ]
+    }
+  ]
+}
