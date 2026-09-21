@@ -211,10 +211,14 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 | 工具名 | 用途 | 数据从哪来 |
 | --- | --- | --- |
 | `lookup_mc_wiki` | 查 Minecraft 知识 | 官方百科家族 MediaWiki API：先 `https://zh.minecraft.wiki/`，无结果再 `https://minecraft.wiki/`。不用 Fandom。 |
+| `lookup_mod_wiki` | 查第三方模组 | 没有 Mojang 官方模组百科。先 [MC百科](https://search.mcmod.cn)（中文事实标准），再补 [Modrinth Search API](https://docs.modrinth.com)，链接可指向 [Modded Minecraft Wiki](https://moddedmc.wiki)。不用 Fandom。 |
 | `search_tutorials` | 查已有建造教程 | 只搜本机 `projects/`。有命中才返回教程摘要；没有就空列表，不生成。 |
 | `get_tutorial` | 取出一份教程全文 | 按 id（或能唯一对上的名称）读 `project.json` + `steps.json`。给 `howto_build` 讲解用。不写盘。 |
+| `web_search` | 联网搜索 | 先查 Minecraft Wiki，再查中文维基百科，返回标题、链接、短摘要。对话里「联网搜索」按钮走这条。 |
 
 `lookup_mc_wiki`：输入 `query`；输出 `source`、`items[{ title, url, extract }]`。走 `api.php` 的 search + extracts，带本机 User-Agent；超时或站点失败返回 `TOOL_ERROR`，查无结果仍是成功空列表。
+
+`lookup_mod_wiki`：输入 `query`（如 JEI、机械动力）；输出 `source`（`mcmod.cn` / `modrinth` / `mixed`）、`items[{ title, url, extract, officialUrl? }]`。MC百科解析搜索页；Modrinth 走公开 v2 search。查无结果仍是成功空列表。
 
 `search_tutorials`：输入 `query`（如「末地门」）；按标题、id、说明和别名打分。命中则返回 `{ id, title, description, versions, score, groups }`；`groups` 是步骤组标题，便于讲解。对不上返回 `items: []`。
 
@@ -229,12 +233,30 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 | 意图 | 本轮做什么 | 答文 |
 | --- | --- | --- |
 | `greeting` | 不调工具 | 回礼，说明能查教程、问知识、生成建筑 |
-| `ask_mc` | `lookup_mc_wiki` | 用百科摘要回答，附链接 |
+| `ask_mc` | 原版走 `lookup_mc_wiki`；选了「问模组」或原文像模组则走 `lookup_mod_wiki` | 用百科/模组词条摘要回答，附链接 |
 | `howto_build` | `search_tutorials`；唯一命中再 `get_tutorial` | 步骤组大纲 + `playPath`；多份则列出 id 让用户收窄；没有则说明库中没有 |
 | `generate_build` | 改写 → 第 10 节生成 | 成功则给新工程 id 与 `playPath`；失败不写盘，把错误说给用户 |
 | `unclear` | 不调工具 | 只追问一句 |
 
-输出：`{ intent, reply, toolsUsed, wiki?, tutorials?, tutorial?, generate?, playPath? }`。前端「对话」页只认这一包。百科/工具失败写进 `reply`，尽量仍返回 200。
+输出：`{ intent, reply, toolsUsed, skill?, wiki?, mods?, tutorials?, tutorial?, generate?, web?, playPath? }`。前端「对话」页只认这一包。百科/工具失败写进 `reply`，尽量仍返回 200。
+
+`query/turn` 可带 `skill`（强制走某条 skill）或 `webSearch: true`（本轮只联网搜索）。
+
+### 9.5 Skill 与 Tool
+
+前面交付的百科、搜教程、取教程、联网搜索都是 **Tool**：有名字、参数、返回值的函数。
+
+**Skill** 是路线说明书：何时触发、按什么顺序调哪些 Tool、禁止做什么。对话页有 Skill 模块（自动 / 问 MC 知识 / 问模组 / 查教程 / 生成建筑 / 联网搜索）。自动 = 先意图再选 skill；点选则跳过自动意图。说明书在 `skills/<id>/SKILL.md`。
+
+| Skill | 使用的 Tool |
+| --- | --- |
+| `ask-mc` | `lookup_mc_wiki` |
+| `ask-mod` | `lookup_mod_wiki` |
+| `howto-build` | `search_tutorials` → `get_tutorial` |
+| `generate-build` | 改写 + 生成器 |
+| `web-search` | `web_search` |
+
+接口：`GET /api/v1/skills`。
 
 ## 10. 大模型生成
 
@@ -255,7 +277,7 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 ## 11. 播放器 UI
 
 - 首页：列出 `projects/`；顶部搜索栏按标题、说明、id 过滤已有教程；入口「对话」。
-- 对话页：输入一句中文，走 `query/turn`（查教程、问知识、生成建筑），可跳到播放器。没有单独的生成页；旧路径 `/generate` 转到对话。
+- 对话页：消息在上，Skill 条贴在输入框上方，联网搜索在输入旁。没有单独的生成页；旧路径 `/generate` 转到对话。
 - 播放页：3D 场景 + 组时间轴（上一组 / 下一组，组内可展开逐步）。
 - **未做到的组不显示**（避免完整形态剧透）；当前组新放置方块高亮。
 - 相机：轨道旋转与缩放，Y 向上，格点对齐。
@@ -303,6 +325,7 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
   src/                 页面与 3D
   server/              本机 API、校验、注册表、生成
   shared/              IR 类型与纯函数（前后端共用）
+  skills/<id>/SKILL.md Skill 说明书
 ```
 
 ## 16. 非功能
@@ -335,11 +358,14 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 | GET | `/api/v1/projects/:id` | 200 / 404 | `{ project, steps }` |
 | POST | `/api/v1/query/rewrite` | 200 / 400 / 502 | `{ original, rewritten, assumptions, suggestedRefIds, titleHint? }`；body：`{ text, version?, refIds? }` |
 | POST | `/api/v1/query/intent` | 200 / 400 | `{ intent, confidence, source, reason, slots }`；body：`{ text, rewritten? }` |
-| POST | `/api/v1/query/turn` | 200 / 400 | `{ intent, reply, toolsUsed, wiki?, tutorials?, tutorial?, generate?, playPath? }`；body：`{ text, version? }` |
+| POST | `/api/v1/query/turn` | 200 / 400 | `{ intent, reply, toolsUsed, skill?, wiki?, tutorials?, tutorial?, generate?, web?, playPath? }`；body：`{ text, version?, skill?, webSearch? }` |
+| GET | `/api/v1/skills` | 200 | `{ items: AgentSkill[] }` |
 | GET | `/api/v1/tools` | 200 | `{ items: AgentToolDef[] }` |
 | POST | `/api/v1/tools/lookup_mc_wiki` | 200 / 400 / 502 | `{ query, source, items }`；body：`{ query }` |
+| POST | `/api/v1/tools/lookup_mod_wiki` | 200 / 400 / 502 | `{ query, source, items }`；body：`{ query }` |
 | POST | `/api/v1/tools/search_tutorials` | 200 / 400 | `{ query, items }`；body：`{ query }` |
 | POST | `/api/v1/tools/get_tutorial` | 200 / 400 / 404 | `{ id, project, steps, playPath }`；body：`{ id }` |
+| POST | `/api/v1/tools/web_search` | 200 / 400 / 502 | `{ query, source, items }`；body：`{ query }` |
 | GET | `/api/v1/settings` | 200 | `{ baseURL, model, defaultVersion, hasApiKey }`（永不回传 apiKey） |
 | PUT | `/api/v1/settings` | 200 / 400 | 同上；body 可含 `apiKey`，空字符串表示不改 |
 | GET | `/api/v1/versions` | 200 | `{ edition: "java", versions: [...] }` |

@@ -224,12 +224,48 @@ textarea {
   min-height: calc(100vh - 6.5rem);
 }
 
+.chat h1 {
+  margin-bottom: 0.55rem;
+}
+
+.skill-dock {
+  border-top: 1px solid #4a3f2c;
+  padding: 0.5rem 0.75rem 0.35rem;
+  background: #1a1712;
+}
+
+.skill-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.skill-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: #a39882;
+}
+
+.chat-dialog {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 22rem;
+  border: 1px solid #4a3f2c;
+  border-radius: 8px;
+  background: #16130f;
+  overflow: hidden;
+}
+
 .chat-log {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin: 0.75rem 0;
+  margin: 0;
+  padding: 0.85rem;
+  overflow: auto;
 }
 
 .bubble {
@@ -254,6 +290,9 @@ textarea {
   display: flex;
   gap: 0.5rem;
   align-items: flex-end;
+  padding: 0.65rem 0.75rem;
+  border-top: 1px solid #4a3f2c;
+  background: #1f1c16;
 }
 
 .chat-compose textarea {
@@ -264,4 +303,45 @@ textarea {
 .chat-compose .btn {
   margin-top: 0;
   flex-shrink: 0;
+}
+
+.chat-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.skill-label {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #cbbc9a;
+  flex-shrink: 0;
+}
+
+.skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #6a5d45;
+  background: transparent;
+  color: #e8e4d9;
+  cursor: pointer;
+}
+
+.chip.on {
+  background: #3d5c18;
+  border-color: #7db82f;
+  color: #f4ffd8;
+}
+
+.web-hits {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
 }

@@ -10,6 +10,7 @@ const GREETING = /^(你好|您好|嗨|哈喽|哈咯|hello|hi|hey|在吗|早上�
 const HOWTO = /(怎么|如何)(搭|建|做|造|弄)|建造方法|搭建教程|怎么教/;
 const GENERATE = /(生成|设计一座|做一座|造一座|来一座|来个|帮我(建|做|造|生成|设计)|给我(建|做|造|生成))/;
 const ASK = /(是什么|什么是|为什么|原理|有什么区别|哪个版本|方块|红石|能用吗|怎么工作)/;
+const ASK_MOD = /模组|\bmods?\b|modrinth|curseforge|mcmod|mc百科/;
 
 function result(intent: IntentResult, confidence: number, source: IntentData["source"], reason: string, slots: IntentSlots = {}): IntentData {
   return { intent, confidence, source, reason, slots };
@@ -29,7 +30,12 @@ export function classifyByRules(text: string, catalog: ProjectSummary[]): Intent
   const wantsGenerate = GENERATE.test(raw);
   const wantsHowto = HOWTO.test(raw);
   const wantsAsk = ASK.test(raw);
+  const wantsMod = ASK_MOD.test(raw);
   const projects = matchProjects(raw, catalog);
+
+  if (wantsMod && !wantsGenerate && !wantsHowto) {
+    return result("ask_mc", 0.88, "rule", "在问第三方模组", { topic: raw });
+  }
 
   if (wantsHowto && !wantsGenerate) {
     return result("howto_build", projects[0] ? 0.92 : 0.75, "rule", "在问已有东西怎么搭", {

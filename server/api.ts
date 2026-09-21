@@ -13,14 +13,19 @@ import {
   type GetTutorialBody,
   type TutorialSearchBody,
   type TurnBody,
+  type WebSearchBody,
   type WikiLookupBody,
+  type ModWikiBody,
 } from "../shared/api-contract.ts";
+import { AGENT_SKILLS } from "../shared/skills.ts";
 import { handleTurn } from "./turn.ts";
+import { webSearch } from "./web-search.ts";
 import { AGENT_TOOLS } from "../shared/agent-tools.ts";
 import { classifyIntent } from "./intent.ts";
 import { rewriteQuery } from "./rewrite.ts";
 import { getTutorial, searchTutorials } from "./tutorials.ts";
 import { lookupMcWiki } from "./wiki.ts";
+import { lookupModWiki } from "./mod-wiki.ts";
 import { assertLlmSettings, chat, extractJson } from "./llm.ts";
 import { GENERATE_MAX_ATTEMPTS, JAVA_VERSIONS, coerceJavaVersion, isJavaVersion } from "../shared/constants.ts";
 import type { ProjectBundle, SettingsFile, ValidationIssue } from "../shared/types.ts";
@@ -201,6 +206,8 @@ export async function runTurn(ctx: ApiContext, req: TurnBody) {
     searchTutorials: (query) => runSearchTutorials(ctx, query),
     getTutorial: (id) => runGetTutorial(ctx, id),
     lookupWiki: (query) => lookupMcWiki(query),
+    lookupModWiki: (query) => lookupModWiki(query),
+    webSearch: (query) => webSearch(query),
     rewrite: (text, version) => runRewrite(ctx, { text, version }),
     generate: (body) => generateProject(ctx, body),
     defaultVersion: settings.defaultVersion,
@@ -305,6 +312,13 @@ const routes: Route[] = [
   },
   {
     method: "GET",
+    match: (p) => (p === `${API_PREFIX}/skills` ? [] : null),
+    async handle(_ctx, _req, res) {
+      sendOk(res, { items: AGENT_SKILLS });
+    },
+  },
+  {
+    method: "GET",
     match: (p) => (p === `${API_PREFIX}/tools` ? [] : null),
     async handle(_ctx, _req, res) {
       sendOk(res, { items: AGENT_TOOLS });
@@ -320,10 +334,26 @@ const routes: Route[] = [
   },
   {
     method: "POST",
+    match: (p) => (p === `${API_PREFIX}/tools/lookup_mod_wiki` ? [] : null),
+    async handle(_ctx, req, res) {
+      const body = (await readJsonBody(req)) as ModWikiBody;
+      sendOk(res, await lookupModWiki(body.query ?? ""));
+    },
+  },
+  {
+    method: "POST",
     match: (p) => (p === `${API_PREFIX}/tools/search_tutorials` ? [] : null),
     async handle(ctx, req, res) {
       const body = (await readJsonBody(req)) as TutorialSearchBody;
       sendOk(res, await runSearchTutorials(ctx, body.query ?? ""));
+    },
+  },
+  {
+    method: "POST",
+    match: (p) => (p === `${API_PREFIX}/tools/web_search` ? [] : null),
+    async handle(_ctx, req, res) {
+      const body = (await readJsonBody(req)) as WebSearchBody;
+      sendOk(res, await webSearch(body.query ?? ""));
     },
   },
   {

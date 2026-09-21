@@ -56,10 +56,13 @@ npm run dev
 | POST | `/api/v1/query/rewrite` |
 | POST | `/api/v1/query/intent` |
 | POST | `/api/v1/query/turn` |
+| GET | `/api/v1/skills` |
 | GET | `/api/v1/tools` |
 | POST | `/api/v1/tools/lookup_mc_wiki` |
+| POST | `/api/v1/tools/lookup_mod_wiki` |
 | POST | `/api/v1/tools/search_tutorials` |
 | POST | `/api/v1/tools/get_tutorial` |
+| POST | `/api/v1/tools/web_search` |
 | GET / PUT | `/api/v1/settings` |
 | GET | `/api/v1/versions` |
 | GET | `/api/v1/versions/:version/blocks` |

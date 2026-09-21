@@ -1,5 +1,6 @@
-import { API_PREFIX, type ApiEnvelope, type GetTutorialData, type ProjectListData, type SettingsPublic, type SettingsWriteBody, type TextureStatusData, type TutorialSearchData, type TurnBody, type TurnData, type VersionBlocksData, type VersionsData, type WikiLookupData } from "@shared/api-contract.ts";
+import { API_PREFIX, type ApiEnvelope, type GetTutorialData, type ModWikiData, type ProjectListData, type SettingsPublic, type SettingsWriteBody, type TextureStatusData, type TutorialSearchData, type TurnBody, type TurnData, type VersionBlocksData, type VersionsData, type WebSearchData, type WikiLookupData } from "@shared/api-contract.ts";
 import type { AgentToolDef } from "@shared/agent-tools.ts";
+import type { AgentSkill } from "@shared/skills.ts";
 import type { ProjectBundle, ValidationIssue } from "@shared/types.ts";
 
 export class ApiError extends Error {
@@ -70,6 +71,10 @@ export function sendTurn(body: TurnBody) {
   return request<TurnData>("/query/turn", jsonInit("POST", body));
 }
 
+export function fetchSkills() {
+  return request<{ items: AgentSkill[] }>("/skills").then((d) => d.items);
+}
+
 export function fetchAgentTools() {
   return request<{ items: AgentToolDef[] }>("/tools").then((d) => d.items);
 }
@@ -78,12 +83,20 @@ export function lookupMcWiki(query: string) {
   return request<WikiLookupData>("/tools/lookup_mc_wiki", jsonInit("POST", { query }));
 }
 
+export function lookupModWiki(query: string) {
+  return request<ModWikiData>("/tools/lookup_mod_wiki", jsonInit("POST", { query }));
+}
+
 export function searchTutorials(query: string) {
   return request<TutorialSearchData>("/tools/search_tutorials", jsonInit("POST", { query }));
 }
 
 export function getTutorial(id: string) {
   return request<GetTutorialData>("/tools/get_tutorial", jsonInit("POST", { id }));
+}
+
+export function searchWeb(query: string) {
+  return request<WebSearchData>("/tools/web_search", jsonInit("POST", { query }));
 }
 
 export function fetchTextureStatus() {

@@ -144,9 +144,42 @@ export type GetTutorialData = {
   playPath: string;
 };
 
+export type WebSearchBody = { query: string };
+
+export type WebSearchItem = {
+  title: string;
+  url: string;
+  snippet: string;
+};
+
+export type WebSearchData = {
+  query: string;
+  source: "mixed" | "duckduckgo";
+  items: WebSearchItem[];
+};
+
+export type ModWikiBody = { query: string };
+
+export type ModWikiItem = {
+  title: string;
+  url: string;
+  extract: string;
+  source: "mcmod.cn" | "modrinth";
+  officialUrl?: string;
+  docsUrl?: string;
+};
+
+export type ModWikiData = {
+  query: string;
+  source: "mcmod.cn" | "modrinth" | "mixed";
+  items: ModWikiItem[];
+};
+
 export type TurnBody = {
   text: string;
   version?: string;
+  skill?: string;
+  webSearch?: boolean;
 };
 
 export type TurnData = {
@@ -154,10 +187,13 @@ export type TurnData = {
   reason: string;
   reply: string;
   toolsUsed: string[];
+  skill?: string;
   wiki?: WikiLookupData;
   tutorials?: TutorialSearchData;
   tutorial?: GetTutorialData;
   generate?: GenerateData;
+  web?: WebSearchData;
+  mods?: ModWikiData;
   playPath?: string;
 };
 

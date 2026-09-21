@@ -1,5 +1,5 @@
 export type AgentToolDef = {
-  name: "lookup_mc_wiki" | "search_tutorials" | "get_tutorial";
+  name: "lookup_mc_wiki" | "lookup_mod_wiki" | "search_tutorials" | "get_tutorial" | "web_search";
   description: string;
   parameters: {
     type: "object";
@@ -17,6 +17,18 @@ export const AGENT_TOOLS: AgentToolDef[] = [
       type: "object",
       properties: {
         query: { type: "string", description: "要查的词，如 黑曜石、末地传送门、红石火把" },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "lookup_mod_wiki",
+    description:
+      "查第三方模组：先 MC百科（search.mcmod.cn），再补 Modrinth 项目页。Minecraft 没有 Mojang 官方模组百科。不要用来查原版方块或生成建筑。",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "模组名或缩写，如 JEI、机械动力、Create" },
       },
       required: ["query"],
     },
@@ -43,6 +55,18 @@ export const AGENT_TOOLS: AgentToolDef[] = [
         id: { type: "string", description: "工程 id，如 end-portal-basic；或唯一可解析的名称，如 末地门" },
       },
       required: ["id"],
+    },
+  },
+  {
+    name: "web_search",
+    description:
+      "联网检索公开网页，返回标题、链接和短摘要。用户点了联网搜索，或百科不够时用。不写盘。",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "搜索词，如 1.20 村庄机制 或 末地传送门 教程" },
+      },
+      required: ["query"],
     },
   },
 ];
