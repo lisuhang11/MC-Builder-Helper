@@ -24,7 +24,6 @@ export const BLOCK_COLORS: Record<string, string> = {
   "minecraft:oak_leaves": "#3d7a21",
   "minecraft:crafting_table": "#8b5a2b",
   "minecraft:chest": "#8b5a2b",
-  "minecraft:torch": "#ffd56a",
   "minecraft:bricks": "#995542",
   "minecraft:sand": "#e6d7a2",
   "minecraft:sandstone": "#d8c48a",
@@ -34,7 +33,11 @@ export const BLOCK_COLORS: Record<string, string> = {
   "minecraft:white_wool": "#e8e8e8",
   "minecraft:red_wool": "#b02e26",
   "minecraft:blue_wool": "#35399d",
-  "minecraft:air": "#000000",
+  "minecraft:end_portal_frame": "#4a3d2a",
+  "minecraft:end_portal": "#1a0b2e",
+  "minecraft:torch": "#c9a36a",
+  "minecraft:redstone_torch": "#c04030",
+  "minecraft:soul_torch": "#6ad4d0",
 };
 
 export function colorForBlock(name: string): string {

@@ -2,5 +2,6 @@
   "baseURL": "https://api.openai.com/v1",
   "apiKey": "",
   "model": "gpt-4o-mini",
-  "defaultVersion": "1.20"
+  "defaultVersion": "1.20",
+  "minecraftPath": ""
 }

@@ -52,8 +52,14 @@ export default function PlayerPage() {
     return occupy(bundle, groupIndex, expandSteps ? stepInGroup : undefined, available);
   }, [available, bundle, expandSteps, groupIndex, stepInGroup]);
 
-  const groupMats = useMemo(() => countMaterials(cells, true), [cells]);
-  const totalMats = useMemo(() => countMaterials(cells, false), [cells]);
+  const groupMats = useMemo(() => {
+    if (!bundle) return [];
+    return countMaterials(bundle, groupIndex, expandSteps ? stepInGroup : undefined, true, available);
+  }, [available, bundle, expandSteps, groupIndex, stepInGroup]);
+  const totalMats = useMemo(() => {
+    if (!bundle) return [];
+    return countMaterials(bundle, groupIndex, expandSteps ? stepInGroup : undefined, false, available);
+  }, [available, bundle, expandSteps, groupIndex, stepInGroup]);
 
   if (error) return <p className="error">{error}</p>;
   if (!bundle) return <p>载入工程…</p>;
@@ -79,6 +85,7 @@ export default function PlayerPage() {
           ))}
         </select>
         <p className="muted">工程声明：{bundle.project.versions.join("、")}</p>
+        <p className="muted">末地门/末影之眼要用官方材质时，在「设置」里填本机 .minecraft 或版本 jar。应用不附带 Mojang 文件。</p>
         {unavailable.length > 0 && (
           <p className="error">
             本版本不可用 {unavailable.length} 步

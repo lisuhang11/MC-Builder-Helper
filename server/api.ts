@@ -5,15 +5,27 @@ import {
   API_PREFIX,
   ErrorCode,
   type GenerateBody,
+  type IntentBody,
   type ProjectSummary,
+  type RewriteBody,
   type SettingsPublic,
   type SettingsWriteBody,
+  type GetTutorialBody,
+  type TutorialSearchBody,
+  type WikiLookupBody,
 } from "../shared/api-contract.ts";
+import { AGENT_TOOLS } from "../shared/agent-tools.ts";
+import { classifyIntent } from "./intent.ts";
+import { rewriteQuery } from "./rewrite.ts";
+import { getTutorial, searchTutorials } from "./tutorials.ts";
+import { lookupMcWiki } from "./wiki.ts";
+import { assertLlmSettings, chat, extractJson } from "./llm.ts";
 import { GENERATE_MAX_ATTEMPTS, JAVA_VERSIONS, coerceJavaVersion, isJavaVersion } from "../shared/constants.ts";
 import type { ProjectBundle, SettingsFile, ValidationIssue } from "../shared/types.ts";
 import { slugify, validateBundle } from "../shared/validate.ts";
-import { HttpError, isEnoent, readJsonBody, sendErr, sendOk, toHttpError } from "./http.ts";
+import { HttpError, isEnoent, readJsonBody, sendBytes, sendErr, sendOk, toHttpError } from "./http.ts";
 import { listBlockNames, makeLookup } from "./registry.ts";
+import { readTexturePng, textureStatus } from "./textures.ts";
 
 export type ApiContext = {
   rootDir: string;
@@ -93,10 +105,19 @@ async function uniqueId(ctx: ApiContext, desired: string): Promise<string> {
 export async function readSettings(ctx: ApiContext): Promise<SettingsFile> {
   try {
     const s = (await readJson(settingsPath(ctx))) as SettingsFile;
-    return { ...s, defaultVersion: coerceJavaVersion(s.defaultVersion) };
+    return {
+      ...s,
+      defaultVersion: coerceJavaVersion(s.defaultVersion),
+      minecraftPath: typeof s.minecraftPath === "string" ? s.minecraftPath : "",
+    };
   } catch {
     const example = (await readJson(path.join(ctx.rootDir, "settings.example.json"))) as SettingsFile;
-    return { ...example, apiKey: "", defaultVersion: coerceJavaVersion(example.defaultVersion) };
+    return {
+      ...example,
+      apiKey: "",
+      defaultVersion: coerceJavaVersion(example.defaultVersion),
+      minecraftPath: typeof example.minecraftPath === "string" ? example.minecraftPath : "",
+    };
   }
 }
 
@@ -137,55 +158,6 @@ function jsonSchemaHint(): string {
 - id 只能是小写字母数字和短横线。`;
 }
 
-function extractJson(text: string): unknown {
-  const trimmed = text.trim();
-  const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const body = fence ? fence[1] : trimmed;
-  const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start < 0 || end < 0) throw new Error("模型没有返回 JSON 对象");
-  return JSON.parse(body.slice(start, end + 1));
-}
-
-async function chat(settings: SettingsFile, messages: { role: string; content: string }[]): Promise<string> {
-  const base = settings.baseURL.replace(/\/$/, "");
-  const url = `${base}/chat/completions`;
-  const payload: Record<string, unknown> = {
-    model: settings.model,
-    temperature: 0.2,
-    messages,
-    response_format: { type: "json_object" },
-  };
-  let res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${settings.apiKey}`,
-    },
-    body: JSON.stringify(payload),
-  });
-  let raw = await res.text();
-  if (!res.ok && raw.toLowerCase().includes("response_format")) {
-    delete payload.response_format;
-    res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${settings.apiKey}`,
-      },
-      body: JSON.stringify(payload),
-    });
-    raw = await res.text();
-  }
-  if (!res.ok) {
-    throw new HttpError(502, ErrorCode.LLM_ERROR, `模型接口 ${res.status}: ${raw.slice(0, 500)}`);
-  }
-  const data = JSON.parse(raw) as { choices?: { message?: { content?: string } }[] };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("模型返回空内容");
-  return content;
-}
-
 async function loadRefs(ctx: ApiContext, refIds: string[]): Promise<string> {
   if (refIds.length === 0) return "";
   const chunks: string[] = [];
@@ -200,6 +172,26 @@ async function loadRefs(ctx: ApiContext, refIds: string[]): Promise<string> {
   return chunks.join("\n\n");
 }
 
+export async function runRewrite(ctx: ApiContext, req: RewriteBody) {
+  const settings = await readSettings(ctx);
+  const catalog = await listProjects(ctx);
+  return rewriteQuery(settings, catalog, req, settings.defaultVersion);
+}
+
+export async function runIntent(ctx: ApiContext, req: IntentBody) {
+  const settings = await readSettings(ctx);
+  const catalog = await listProjects(ctx);
+  return classifyIntent(settings, catalog, req);
+}
+
+export async function runSearchTutorials(ctx: ApiContext, query: string) {
+  return searchTutorials(await listProjects(ctx), query, (id) => loadProject(ctx, id));
+}
+
+export async function runGetTutorial(ctx: ApiContext, id: string) {
+  return getTutorial(await listProjects(ctx), id, (pid) => loadProject(ctx, pid));
+}
+
 export async function generateProject(ctx: ApiContext, req: GenerateBody) {
   const description = req.description?.trim() ?? "";
   if (!description) {
@@ -209,23 +201,31 @@ export async function generateProject(ctx: ApiContext, req: GenerateBody) {
     throw new HttpError(400, ErrorCode.BAD_REQUEST, `version 必须是 ${JAVA_VERSIONS.join(", ")}`);
   }
   const settings = await readSettings(ctx);
-  if (!settings.apiKey?.trim()) {
-    throw new HttpError(400, ErrorCode.SETTINGS_INCOMPLETE, "请先在设置里填写 apiKey");
-  }
-  if (!settings.baseURL?.trim()) {
-    throw new HttpError(400, ErrorCode.SETTINGS_INCOMPLETE, "请先在设置里填写 baseURL");
-  }
+  assertLlmSettings(settings);
+
+  const rewrite = req.skipRewrite
+    ? {
+        original: description,
+        rewritten: description,
+        assumptions: [] as string[],
+        suggestedRefIds: req.refIds ?? [],
+      }
+    : await runRewrite(ctx, { text: description, version: req.version, refIds: req.refIds });
+
+  const brief = rewrite.rewritten;
+  const refIds = [...new Set([...(req.refIds ?? []), ...rewrite.suggestedRefIds])];
+
   const lookup = makeLookup(req.version);
   const names = listBlockNames(req.version);
   const nameSample = names.slice(0, 400).join(", ");
-  const refs = await loadRefs(ctx, req.refIds ?? []);
+  const refs = await loadRefs(ctx, refIds);
   const system = `你是 Minecraft Java ${req.version} 的建造 IR 生成器。你只输出合法 JSON。${jsonSchemaHint()}
 可用方块（节选，必须从中选）：${nameSample}`;
   const messages: { role: string; content: string }[] = [
     { role: "system", content: system },
     {
       role: "user",
-      content: `用户描述：${description}\n目标版本：${req.version}\n${refs}`,
+      content: `用户描述：${brief}\n目标版本：${req.version}\n${refs}`,
     },
   ];
 
@@ -253,7 +253,7 @@ export async function generateProject(ctx: ApiContext, req: GenerateBody) {
       result.bundle.project.schema_version = 1;
       result.bundle.steps.schema_version = 1;
       await saveProject(ctx, result.bundle);
-      return { id, attempts: attempt + 1 };
+      return { id, attempts: attempt + 1, rewrite };
     }
     lastIssues = result.issues;
     messages.push({
@@ -270,6 +270,7 @@ function publicSettings(s: SettingsFile): SettingsPublic {
     model: s.model,
     defaultVersion: s.defaultVersion,
     hasApiKey: Boolean(s.apiKey?.trim()),
+    minecraftPath: s.minecraftPath ?? "",
   };
 }
 
@@ -285,6 +286,53 @@ const routes: Route[] = [
     match: (p) => (p === `${API_PREFIX}/projects` ? [] : null),
     async handle(ctx, _req, res) {
       sendOk(res, { items: await listProjects(ctx) });
+    },
+  },
+  {
+    method: "GET",
+    match: (p) => (p === `${API_PREFIX}/tools` ? [] : null),
+    async handle(_ctx, _req, res) {
+      sendOk(res, { items: AGENT_TOOLS });
+    },
+  },
+  {
+    method: "POST",
+    match: (p) => (p === `${API_PREFIX}/tools/lookup_mc_wiki` ? [] : null),
+    async handle(_ctx, req, res) {
+      const body = (await readJsonBody(req)) as WikiLookupBody;
+      sendOk(res, await lookupMcWiki(body.query ?? ""));
+    },
+  },
+  {
+    method: "POST",
+    match: (p) => (p === `${API_PREFIX}/tools/search_tutorials` ? [] : null),
+    async handle(ctx, req, res) {
+      const body = (await readJsonBody(req)) as TutorialSearchBody;
+      sendOk(res, await runSearchTutorials(ctx, body.query ?? ""));
+    },
+  },
+  {
+    method: "POST",
+    match: (p) => (p === `${API_PREFIX}/tools/get_tutorial` ? [] : null),
+    async handle(ctx, req, res) {
+      const body = (await readJsonBody(req)) as GetTutorialBody;
+      sendOk(res, await runGetTutorial(ctx, body.id ?? ""));
+    },
+  },
+  {
+    method: "POST",
+    match: (p) => (p === `${API_PREFIX}/query/intent` ? [] : null),
+    async handle(ctx, req, res) {
+      const body = (await readJsonBody(req)) as IntentBody;
+      sendOk(res, await runIntent(ctx, body));
+    },
+  },
+  {
+    method: "POST",
+    match: (p) => (p === `${API_PREFIX}/query/rewrite` ? [] : null),
+    async handle(ctx, req, res) {
+      const body = (await readJsonBody(req)) as RewriteBody;
+      sendOk(res, await runRewrite(ctx, body));
     },
   },
   {
@@ -324,6 +372,7 @@ const routes: Route[] = [
         model: body.model ?? prev.model,
         defaultVersion: body.defaultVersion ?? prev.defaultVersion,
         apiKey: body.apiKey?.trim() ? body.apiKey : prev.apiKey,
+        minecraftPath: body.minecraftPath !== undefined ? body.minecraftPath : (prev.minecraftPath ?? ""),
       };
       if (!isJavaVersion(next.defaultVersion)) {
         throw new HttpError(400, ErrorCode.BAD_REQUEST, `defaultVersion 必须是 ${JAVA_VERSIONS.join(", ")}`);
@@ -385,6 +434,20 @@ export async function handleApi(ctx: ApiContext, req: IncomingMessage, res: Serv
   try {
     if (!pathname.startsWith(API_PREFIX)) {
       throw new HttpError(404, ErrorCode.NOT_FOUND, `请使用 ${API_PREFIX}，例如 GET ${API_PREFIX}/projects`);
+    }
+
+    if (req.method === "GET" && (pathname === `${API_PREFIX}/textures` || pathname === `${API_PREFIX}/textures/status`)) {
+      sendOk(res, await textureStatus(await readSettings(ctx)));
+      return true;
+    }
+    if (req.method === "GET" && pathname.startsWith(`${API_PREFIX}/textures/`)) {
+      const rel = decodeURIComponent(pathname.slice(`${API_PREFIX}/textures/`.length));
+      const png = await readTexturePng(await readSettings(ctx), rel);
+      if (!png) {
+        throw new HttpError(404, ErrorCode.NOT_FOUND, `没有这张材质：${rel}`);
+      }
+      sendBytes(res, 200, png, "image/png");
+      return true;
     }
 
     const methodHits = routes.filter((r) => r.match(pathname));

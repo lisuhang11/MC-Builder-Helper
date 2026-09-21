@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
 import { JAVA_VERSIONS } from "@shared/constants.ts";
-import { fetchSettings, saveSettings, type SettingsView } from "../api.ts";
+import { fetchSettings, fetchTextureStatus, saveSettings, type SettingsView } from "../api.ts";
 
 export default function SettingsPage() {
   const [form, setForm] = useState<SettingsView | null>(null);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  const [texHint, setTexHint] = useState("");
 
   useEffect(() => {
     fetchSettings()
       .then(setForm)
       .catch((e: Error) => setError(e.message));
+    fetchTextureStatus()
+      .then((s) => setTexHint(s.hint + (s.source ? ` 当前：${s.source}` : "")))
+      .catch(() => undefined);
   }, []);
 
   if (!form) return <p>{error || "读取设置…"}</p>;
@@ -31,6 +35,13 @@ export default function SettingsPage() {
         placeholder={form.hasApiKey ? "已保存，不显示" : ""}
         onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
       />
+      <label>本机 Minecraft / 材质包路径</label>
+      <input
+        value={form.minecraftPath}
+        placeholder="~/.minecraft、versions/1.20.1/1.20.1.jar，或资源包目录"
+        onChange={(e) => setForm({ ...form, minecraftPath: e.target.value })}
+      />
+      {texHint && <p className="muted">{texHint}</p>}
       <label>默认 Java 版本</label>
       <select
         value={form.defaultVersion}
@@ -47,7 +58,13 @@ export default function SettingsPage() {
             setMsg("");
             setError("");
             saveSettings(form)
-              .then(() => setMsg("已保存"))
+              .then(() => {
+                setMsg("已保存");
+                return fetchTextureStatus();
+              })
+              .then((s) => {
+                if (s) setTexHint(s.hint + (s.source ? ` 当前：${s.source}` : ""));
+              })
               .catch((e: Error) => setError(e.message));
           }}
         >

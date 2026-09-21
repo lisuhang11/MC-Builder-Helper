@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "id": "end-portal-basic",
+  "title": "末地传送门",
+  "description": "12 个末地传送门框架围成一圈，再嵌上末影之眼。框架有朝向和凹槽，眼睛会坐在框顶上，不是一整块方块。",
+  "edition": "java",
+  "versions": ["1.7.10", "1.8", "1.12", "1.16", "1.20"],
+  "origin": [0, 0, 0],
+  "author": "内置教程"
+}

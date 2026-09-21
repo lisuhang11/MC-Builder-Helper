@@ -1,3 +1,4 @@
+import { truthyState } from "./block-kind.ts";
 import { MAX_AXIS_SPAN, MAX_OCCUPIED_CELLS } from "./constants.ts";
 import type { BuildStep, MaterialCount, ProjectBundle, Vec3 } from "./types.ts";
 
@@ -54,11 +55,45 @@ export function occupy(
   return [...grid.values()];
 }
 
-export function countMaterials(cells: OccupiedCell[], onlyCurrentGroup: boolean): MaterialCount[] {
+function addCount(map: Map<string, number>, name: string, n = 1) {
+  map.set(name, (map.get(name) ?? 0) + n);
+}
+
+/** 按步骤统计要带的材料：嵌眼睛算末影之眼，不再把已放的框架数一遍。 */
+export function countMaterials(
+  bundle: ProjectBundle,
+  groupIndex: number,
+  stepInGroup: number | undefined,
+  onlyCurrentGroup: boolean,
+  available: (name: string) => boolean,
+): MaterialCount[] {
+  const grid = new Map<string, { name: string; eye: boolean }>();
   const map = new Map<string, number>();
-  for (const cell of cells) {
-    if (onlyCurrentGroup && !cell.fromCurrentGroup) continue;
-    map.set(cell.name, (map.get(cell.name) ?? 0) + 1);
+  const lastGroup = Math.min(groupIndex, bundle.steps.groups.length - 1);
+  for (let g = 0; g <= lastGroup; g++) {
+    const steps = bundle.steps.groups[g].steps;
+    const limit = g === lastGroup && stepInGroup !== undefined ? stepInGroup + 1 : steps.length;
+    const tally = !onlyCurrentGroup || g === lastGroup;
+    for (let i = 0; i < limit; i++) {
+      const step = steps[i];
+      const key = cellKey(step.pos);
+      if (step.op === "remove") {
+        grid.delete(key);
+        continue;
+      }
+      const name = step.block?.name;
+      if (!name || !available(name)) continue;
+      const eye = truthyState(step.block?.state?.eye);
+      const prev = grid.get(key);
+      if (tally) {
+        const sameBlock = prev?.name === name;
+        if (!sameBlock) addCount(map, name);
+        if (name.replace(/^minecraft:/, "") === "end_portal_frame" && eye && !prev?.eye) {
+          addCount(map, "minecraft:ender_eye");
+        }
+      }
+      grid.set(key, { name, eye });
+    }
   }
   return [...map.entries()]
     .map(([name, count]) => ({ name, count }))

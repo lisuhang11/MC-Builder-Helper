@@ -12,7 +12,7 @@ export default function App() {
           MC 建造教室
         </NavLink>
         <nav>
-          <NavLink to="/">课程</NavLink>
+          <NavLink to="/">教程</NavLink>
           <NavLink to="/generate">生成建筑</NavLink>
           <NavLink to="/settings">设置</NavLink>
         </nav>

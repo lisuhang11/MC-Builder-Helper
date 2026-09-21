@@ -8,10 +8,10 @@
 
 ## 能做什么
 
-- 播放内置课：下界传送门、一线 / 双道刷石机
+- 播放内置教程：下界传送门、末地传送门、简易刷石机
 - 按组前进，未做到的组先不显示；材料显示中文名
 - 经典 Java 版本：`1.7.10`、`1.8`、`1.12`、`1.16`、`1.20`
-- 用自然语言生成一座建筑（OpenAI 兼容接口），只接受校验过的 JSON 工程
+- 用自然语言生成一座建筑：先查询改写，再经 OpenAI 兼容接口出 IR，只接受校验过的 JSON 工程
 
 ## 运行
 
@@ -34,6 +34,8 @@ npm run dev
 
 密钥写在仓库根目录的 `settings.json`，已加入 `.gitignore`，不要提交。可参考 `settings.example.json`。
 
+3D 预览不会附带原版材质。要在设置里填写本机 `.minecraft`、`versions/<ver>/<ver>.jar`，或已解压资源包目录；服务端只从本地 jar/zip 读 PNG，用最近邻贴图。留空时会尝试 `~/.minecraft`。
+
 ## 工程文件
 
 每座建筑一个目录 `projects/<id>/`：
@@ -51,6 +53,12 @@ npm run dev
 | --- | --- |
 | GET | `/api/v1/projects` |
 | GET | `/api/v1/projects/:id` |
+| POST | `/api/v1/query/rewrite` |
+| POST | `/api/v1/query/intent` |
+| GET | `/api/v1/tools` |
+| POST | `/api/v1/tools/lookup_mc_wiki` |
+| POST | `/api/v1/tools/search_tutorials` |
+| POST | `/api/v1/tools/get_tutorial` |
 | POST | `/api/v1/projects/generate` |
 | GET / PUT | `/api/v1/settings` |
 | GET | `/api/v1/versions` |

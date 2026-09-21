@@ -66,6 +66,8 @@ export type SettingsFile = {
   apiKey: string;
   model: string;
   defaultVersion: string;
+  /** 本机 .minecraft、客户端 jar，或资源包目录。不进 Git。 */
+  minecraftPath?: string;
 };
 
 export type MaterialCount = {

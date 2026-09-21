@@ -37,12 +37,22 @@
       "id": "light",
       "title": "点亮门面",
       "steps": [
-        { "op": "place", "pos": [1, 1, 0], "block": { "name": "minecraft:nether_portal", "state": {} }, "note": "游戏里对框使用打火石；这里直接放置门方块" },
-        { "op": "place", "pos": [2, 1, 0], "block": { "name": "minecraft:nether_portal", "state": {} } },
-        { "op": "place", "pos": [1, 2, 0], "block": { "name": "minecraft:nether_portal", "state": {} } },
-        { "op": "place", "pos": [2, 2, 0], "block": { "name": "minecraft:nether_portal", "state": {} } },
-        { "op": "place", "pos": [1, 3, 0], "block": { "name": "minecraft:nether_portal", "state": {} } },
-        { "op": "place", "pos": [2, 3, 0], "block": { "name": "minecraft:nether_portal", "state": {} } }
+        { "op": "place", "pos": [1, 1, 0], "block": { "name": "minecraft:nether_portal", "state": { "axis": "z" } }, "note": "游戏里对框使用打火石；这里直接放置门方块" },
+        { "op": "place", "pos": [2, 1, 0], "block": { "name": "minecraft:nether_portal", "state": { "axis": "z" } } },
+        { "op": "place", "pos": [1, 2, 0], "block": { "name": "minecraft:nether_portal", "state": { "axis": "z" } } },
+        { "op": "place", "pos": [2, 2, 0], "block": { "name": "minecraft:nether_portal", "state": { "axis": "z" } } },
+        { "op": "place", "pos": [1, 3, 0], "block": { "name": "minecraft:nether_portal", "state": { "axis": "z" } } },
+        { "op": "place", "pos": [2, 3, 0], "block": { "name": "minecraft:nether_portal", "state": { "axis": "z" } } }
+      ]
+    },
+    {
+      "id": "torches",
+      "title": "门口插火把",
+      "steps": [
+        { "op": "place", "pos": [-1, 0, 1], "block": { "name": "minecraft:cobblestone", "state": {} } },
+        { "op": "place", "pos": [4, 0, 1], "block": { "name": "minecraft:cobblestone", "state": {} } },
+        { "op": "place", "pos": [-1, 1, 1], "block": { "name": "minecraft:torch", "state": {} }, "note": "火把不再是整格方块，和游戏里一样细。" },
+        { "op": "place", "pos": [4, 1, 1], "block": { "name": "minecraft:torch", "state": {} } }
       ]
     }
   ]

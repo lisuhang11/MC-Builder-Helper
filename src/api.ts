@@ -1,4 +1,5 @@
-import { API_PREFIX, type ApiEnvelope, type GenerateBody, type GenerateData, type ProjectListData, type SettingsPublic, type SettingsWriteBody, type VersionBlocksData, type VersionsData } from "@shared/api-contract.ts";
+import { API_PREFIX, type ApiEnvelope, type GenerateBody, type GenerateData, type GetTutorialData, type IntentBody, type IntentData, type ProjectListData, type RewriteBody, type RewriteData, type SettingsPublic, type SettingsWriteBody, type TextureStatusData, type TutorialSearchData, type VersionBlocksData, type VersionsData, type WikiLookupData } from "@shared/api-contract.ts";
+import type { AgentToolDef } from "@shared/agent-tools.ts";
 import type { ProjectBundle, ValidationIssue } from "@shared/types.ts";
 
 export class ApiError extends Error {
@@ -54,7 +55,11 @@ export function fetchRegistry(version: string) {
 export type SettingsView = SettingsPublic & { apiKey: string };
 
 export function fetchSettings() {
-  return request<SettingsPublic>("/settings").then((s) => ({ ...s, apiKey: "" }));
+  return request<SettingsPublic>("/settings").then((s) => ({
+    ...s,
+    apiKey: "",
+    minecraftPath: s.minecraftPath ?? "",
+  }));
 }
 
 export function saveSettings(body: SettingsWriteBody) {
@@ -63,4 +68,36 @@ export function saveSettings(body: SettingsWriteBody) {
 
 export function generateBuild(body: GenerateBody) {
   return request<GenerateData>("/projects/generate", jsonInit("POST", body));
+}
+
+export function rewriteQuery(body: RewriteBody) {
+  return request<RewriteData>("/query/rewrite", jsonInit("POST", body));
+}
+
+export function classifyIntent(body: IntentBody) {
+  return request<IntentData>("/query/intent", jsonInit("POST", body));
+}
+
+export function fetchAgentTools() {
+  return request<{ items: AgentToolDef[] }>("/tools").then((d) => d.items);
+}
+
+export function lookupMcWiki(query: string) {
+  return request<WikiLookupData>("/tools/lookup_mc_wiki", jsonInit("POST", { query }));
+}
+
+export function searchTutorials(query: string) {
+  return request<TutorialSearchData>("/tools/search_tutorials", jsonInit("POST", { query }));
+}
+
+export function getTutorial(id: string) {
+  return request<GetTutorialData>("/tools/get_tutorial", jsonInit("POST", { id }));
+}
+
+export function fetchTextureStatus() {
+  return request<TextureStatusData>("/textures/status");
+}
+
+export function textureUrl(rel: string) {
+  return `${API_PREFIX}/textures/${rel}`;
 }

@@ -30,6 +30,15 @@ export function sendOk<T>(res: ServerResponse, data: T, status = 200) {
   sendJson(res, status, payload);
 }
 
+export function sendBytes(res: ServerResponse, status: number, body: Buffer, contentType: string) {
+  res.writeHead(status, {
+    "Content-Type": contentType,
+    "Content-Length": body.length,
+    "Cache-Control": "public, max-age=86400",
+  });
+  res.end(body);
+}
+
 export function sendErr(res: ServerResponse, err: HttpError) {
   const payload: ApiErr = {
     ok: false,

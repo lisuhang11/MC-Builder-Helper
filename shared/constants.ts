@@ -21,6 +21,23 @@ export const MAX_OCCUPIED_CELLS = 2048;
 export const MAX_AXIS_SPAN = 48;
 export const GENERATE_MAX_ATTEMPTS = 4;
 
+/** 产品意图；unclear 只作系统兜底。 */
+export const INTENTS = ["greeting", "ask_mc", "generate_build", "howto_build"] as const;
+export type Intent = (typeof INTENTS)[number];
+export type IntentResult = Intent | "unclear";
+
+export const INTENT_LABELS: Record<IntentResult, string> = {
+  greeting: "打招呼",
+  ask_mc: "询问 MC 知识",
+  generate_build: "生成建筑",
+  howto_build: "查建造方法",
+  unclear: "意图不明",
+};
+
+export function isIntent(value: string): value is Intent {
+  return (INTENTS as readonly string[]).includes(value);
+}
+
 export function isJavaVersion(value: string): value is JavaVersion {
   return (JAVA_VERSIONS as readonly string[]).includes(value);
 }

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "groups": [
+    {
+      "id": "frames",
+      "title": "围一圈框架",
+      "steps": [
+        { "op": "place", "pos": [1, 0, 0], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "south", "eye": false } }, "note": "12 个框架围成一圈，四角空着。框架比整格矮一截，facing 朝向圈内。" },
+        { "op": "place", "pos": [2, 0, 0], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "south", "eye": false } } },
+        { "op": "place", "pos": [3, 0, 0], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "south", "eye": false } } },
+        { "op": "place", "pos": [1, 0, 4], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "north", "eye": false } } },
+        { "op": "place", "pos": [2, 0, 4], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "north", "eye": false } } },
+        { "op": "place", "pos": [3, 0, 4], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "north", "eye": false } } },
+        { "op": "place", "pos": [0, 0, 1], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "east", "eye": false } } },
+        { "op": "place", "pos": [0, 0, 2], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "east", "eye": false } } },
+        { "op": "place", "pos": [0, 0, 3], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "east", "eye": false } } },
+        { "op": "place", "pos": [4, 0, 1], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "west", "eye": false } } },
+        { "op": "place", "pos": [4, 0, 2], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "west", "eye": false } } },
+        { "op": "place", "pos": [4, 0, 3], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "west", "eye": false } } }
+      ]
+    },
+    {
+      "id": "eyes",
+      "title": "嵌上末影之眼",
+      "steps": [
+        { "op": "place", "pos": [1, 0, 0], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "south", "eye": true } }, "note": "游戏里对框架使用末影之眼。眼睛坐在凹槽里，不是再占一格。" },
+        { "op": "place", "pos": [2, 0, 0], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "south", "eye": true } } },
+        { "op": "place", "pos": [3, 0, 0], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "south", "eye": true } } },
+        { "op": "place", "pos": [1, 0, 4], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "north", "eye": true } } },
+        { "op": "place", "pos": [2, 0, 4], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "north", "eye": true } } },
+        { "op": "place", "pos": [3, 0, 4], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "north", "eye": true } } },
+        { "op": "place", "pos": [0, 0, 1], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "east", "eye": true } } },
+        { "op": "place", "pos": [0, 0, 2], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "east", "eye": true } } },
+        { "op": "place", "pos": [0, 0, 3], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "east", "eye": true } } },
+        { "op": "place", "pos": [4, 0, 1], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "west", "eye": true } } },
+        { "op": "place", "pos": [4, 0, 2], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "west", "eye": true } } },
+        { "op": "place", "pos": [4, 0, 3], "block": { "name": "minecraft:end_portal_frame", "state": { "facing": "west", "eye": true } } }
+      ]
+    },
+    {
+      "id": "portal",
+      "title": "门面出现",
+      "steps": [
+        { "op": "place", "pos": [1, 0, 1], "block": { "name": "minecraft:end_portal", "state": {} }, "note": "12 只眼睛齐了之后，中间是一层传送门，不是实心方块。" },
+        { "op": "place", "pos": [2, 0, 1], "block": { "name": "minecraft:end_portal", "state": {} } },
+        { "op": "place", "pos": [3, 0, 1], "block": { "name": "minecraft:end_portal", "state": {} } },
+        { "op": "place", "pos": [1, 0, 2], "block": { "name": "minecraft:end_portal", "state": {} } },
+        { "op": "place", "pos": [2, 0, 2], "block": { "name": "minecraft:end_portal", "state": {} } },
+        { "op": "place", "pos": [3, 0, 2], "block": { "name": "minecraft:end_portal", "state": {} } },
+        { "op": "place", "pos": [1, 0, 3], "block": { "name": "minecraft:end_portal", "state": {} } },
+        { "op": "place", "pos": [2, 0, 3], "block": { "name": "minecraft:end_portal", "state": {} } },
+        { "op": "place", "pos": [3, 0, 3], "block": { "name": "minecraft:end_portal", "state": {} } }
+      ]
+    }
+  ]
+}

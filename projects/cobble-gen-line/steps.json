@@ -2,47 +2,58 @@
   "schema_version": 1,
   "groups": [
     {
-      "id": "floor",
-      "title": "铺槽底",
+      "id": "trench",
+      "title": "地下挖一排 4 格",
       "steps": [
-        { "op": "place", "pos": [1, 0, 0], "block": { "name": "minecraft:cobblestone", "state": {} }, "note": "水、刷石口、岩浆都坐在这一排底上" },
-        { "op": "place", "pos": [2, 0, 0], "block": { "name": "minecraft:cobblestone", "state": {} } },
-        { "op": "place", "pos": [3, 0, 0], "block": { "name": "minecraft:cobblestone", "state": {} } }
+        { "op": "place", "pos": [-1, 0, -1], "block": { "name": "minecraft:dirt", "state": {} }, "note": "平地挖 4×1、深 1 格。这圈泥土是没挖掉的地面。" },
+        { "op": "place", "pos": [0, 0, -1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [1, 0, -1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [2, 0, -1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [3, 0, -1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [4, 0, -1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [-1, 0, 0], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [4, 0, 0], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [-1, 0, 1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [0, 0, 1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [1, 0, 1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [2, 0, 1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [3, 0, 1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [4, 0, 1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [0, -1, 0], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [1, -1, 0], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [2, -1, 0], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [3, -1, 0], "block": { "name": "minecraft:dirt", "state": {} } }
       ]
     },
     {
-      "id": "walls",
-      "title": "围一格深的槽",
+      "id": "deepen",
+      "title": "靠岩浆那格再往下挖 1 格",
       "steps": [
-        { "op": "place", "pos": [0, 1, 0], "block": { "name": "minecraft:cobblestone", "state": {} }, "note": "堵住水的后端，不然水会流走" },
-        { "op": "place", "pos": [4, 1, 0], "block": { "name": "minecraft:cobblestone", "state": {} }, "note": "堵住岩浆的后端" },
-        { "op": "place", "pos": [1, 1, -1], "block": { "name": "minecraft:cobblestone", "state": {} } },
-        { "op": "place", "pos": [2, 1, -1], "block": { "name": "minecraft:cobblestone", "state": {} } },
-        { "op": "place", "pos": [3, 1, -1], "block": { "name": "minecraft:cobblestone", "state": {} } },
-        { "op": "place", "pos": [1, 1, 1], "block": { "name": "minecraft:cobblestone", "state": {} } },
-        { "op": "place", "pos": [2, 1, 1], "block": { "name": "minecraft:cobblestone", "state": {} } },
-        { "op": "place", "pos": [3, 1, 1], "block": { "name": "minecraft:cobblestone", "state": {} } }
+        { "op": "remove", "pos": [1, -1, 0], "note": "四个格子里，紧挨以后放岩浆的那一格，再往下挖一格。" },
+        { "op": "place", "pos": [1, -2, 0], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [1, -1, -1], "block": { "name": "minecraft:dirt", "state": {} } },
+        { "op": "place", "pos": [1, -1, 1], "block": { "name": "minecraft:dirt", "state": {} } }
       ]
     },
     {
       "id": "water",
-      "title": "先倒水",
+      "title": "另一头倒水",
       "steps": [
-        { "op": "place", "pos": [1, 1, 0], "block": { "name": "minecraft:water", "state": {} }, "note": "水放在槽的一头，会向中间流。一定先水后岩浆，反过来会变成黑曜石" }
+        { "op": "place", "pos": [3, 0, 0], "block": { "name": "minecraft:water", "state": {} }, "note": "水放在远离岩浆的那头，会流过来。先水后岩浆。" }
       ]
     },
     {
       "id": "lava",
-      "title": "再倒岩浆",
+      "title": "深坑这边倒岩浆",
       "steps": [
-        { "op": "place", "pos": [3, 1, 0], "block": { "name": "minecraft:lava", "state": {} }, "note": "岩浆放在另一头，和流水在中间相遇" }
+        { "op": "place", "pos": [0, 0, 0], "block": { "name": "minecraft:lava", "state": {} }, "note": "岩浆紧挨着多挖深的那格。水掉进深坑，冲不到岩浆源上。" }
       ]
     },
     {
       "id": "cobble",
-      "title": "中间刷出圆石",
+      "title": "靠岩浆那格刷出圆石",
       "steps": [
-        { "op": "place", "pos": [2, 1, 0], "block": { "name": "minecraft:cobblestone", "state": {} }, "note": "站在槽边挖掉这块圆石，它会再刷出来。别挖到底和两边的围墙" }
+        { "op": "place", "pos": [1, 0, 0], "block": { "name": "minecraft:cobblestone", "state": {} }, "note": "圆石出在深坑上口。挖掉还会再刷。别挖成岩浆，也别让水漫过去。" }
       ]
     }
   ]
