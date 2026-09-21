@@ -36,10 +36,38 @@ export type ProjectSummary = {
 
 export type ProjectListData = { items: ProjectSummary[] };
 
+export type SessionMessageDto = {
+  role: "user" | "assistant";
+  text: string;
+};
+
+export type SessionFocusDto = {
+  intent?: "greeting" | "ask_mc" | "generate_build" | "howto_build" | "unclear";
+  topic?: string;
+  projectId?: string;
+  tutorialId?: string;
+  tutorialIds?: string[];
+  playPath?: string;
+  rewritten?: string;
+  modQuery?: string;
+  wikiQuery?: string;
+};
+
+export type SessionData = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: SessionMessageDto[];
+  focus: SessionFocusDto;
+};
+
 export type RewriteBody = {
   text: string;
   version?: string;
   refIds?: string[];
+  history?: SessionMessageDto[];
+  previousRewritten?: string;
+  previousProjectId?: string;
 };
 
 export type RewriteData = {
@@ -58,6 +86,8 @@ export type IntentSlots = {
 export type IntentBody = {
   text: string;
   rewritten?: string;
+  history?: SessionMessageDto[];
+  focus?: SessionFocusDto;
 };
 
 export type IntentData = {
@@ -180,9 +210,11 @@ export type TurnBody = {
   version?: string;
   skill?: string;
   webSearch?: boolean;
+  sessionId?: string;
 };
 
 export type TurnData = {
+  sessionId: string;
   intent: IntentData["intent"];
   reason: string;
   reply: string;
@@ -192,9 +224,12 @@ export type TurnData = {
   tutorials?: TutorialSearchData;
   tutorial?: GetTutorialData;
   generate?: GenerateData;
+  rewrite?: RewriteData;
+  issues?: ValidationIssue[];
   web?: WebSearchData;
   mods?: ModWikiData;
   playPath?: string;
+  version?: string;
 };
 
 export type VersionsData = { edition: "java"; versions: string[] };

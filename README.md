@@ -56,6 +56,7 @@ npm run dev
 | POST | `/api/v1/query/rewrite` |
 | POST | `/api/v1/query/intent` |
 | POST | `/api/v1/query/turn` |
+| GET | `/api/v1/sessions/:id` |
 | GET | `/api/v1/skills` |
 | GET | `/api/v1/tools` |
 | POST | `/api/v1/tools/lookup_mc_wiki` |

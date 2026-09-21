@@ -1,4 +1,4 @@
-import { API_PREFIX, type ApiEnvelope, type GetTutorialData, type ModWikiData, type ProjectListData, type SettingsPublic, type SettingsWriteBody, type TextureStatusData, type TutorialSearchData, type TurnBody, type TurnData, type VersionBlocksData, type VersionsData, type WebSearchData, type WikiLookupData } from "@shared/api-contract.ts";
+import { API_PREFIX, type ApiEnvelope, type GetTutorialData, type ModWikiData, type ProjectListData, type SessionData, type SettingsPublic, type SettingsWriteBody, type TextureStatusData, type TutorialSearchData, type TurnBody, type TurnData, type VersionBlocksData, type VersionsData, type WebSearchData, type WikiLookupData } from "@shared/api-contract.ts";
 import type { AgentToolDef } from "@shared/agent-tools.ts";
 import type { AgentSkill } from "@shared/skills.ts";
 import type { ProjectBundle, ValidationIssue } from "@shared/types.ts";
@@ -69,6 +69,10 @@ export function saveSettings(body: SettingsWriteBody) {
 
 export function sendTurn(body: TurnBody) {
   return request<TurnData>("/query/turn", jsonInit("POST", body));
+}
+
+export function fetchSession(id: string) {
+  return request<SessionData>(`/sessions/${encodeURIComponent(id)}`);
 }
 
 export function fetchSkills() {

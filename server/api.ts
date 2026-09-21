@@ -26,6 +26,7 @@ import { rewriteQuery } from "./rewrite.ts";
 import { getTutorial, searchTutorials } from "./tutorials.ts";
 import { lookupMcWiki } from "./wiki.ts";
 import { lookupModWiki } from "./mod-wiki.ts";
+import { loadSession, readSessionPublic, saveSession } from "./session-store.ts";
 import { assertLlmSettings, chat, extractJson } from "./llm.ts";
 import { GENERATE_MAX_ATTEMPTS, JAVA_VERSIONS, coerceJavaVersion, isJavaVersion } from "../shared/constants.ts";
 import type { ProjectBundle, SettingsFile, ValidationIssue } from "../shared/types.ts";
@@ -202,14 +203,29 @@ export async function runGetTutorial(ctx: ApiContext, id: string) {
 export async function runTurn(ctx: ApiContext, req: TurnBody) {
   const settings = await readSettings(ctx);
   return handleTurn(req, {
-    classify: async (text) => classifyIntent(settings, await listProjects(ctx), { text }),
+    classify: async (text, session) =>
+      classifyIntent(settings, await listProjects(ctx), {
+        text,
+        history: session.messages,
+        focus: session.focus,
+      }),
     searchTutorials: (query) => runSearchTutorials(ctx, query),
     getTutorial: (id) => runGetTutorial(ctx, id),
     lookupWiki: (query) => lookupMcWiki(query),
     lookupModWiki: (query) => lookupModWiki(query),
     webSearch: (query) => webSearch(query),
-    rewrite: (text, version) => runRewrite(ctx, { text, version }),
+    rewrite: (text, version, session) =>
+      runRewrite(ctx, {
+        text,
+        version,
+        history: session.messages,
+        previousRewritten: session.focus.rewritten,
+        previousProjectId: session.focus.projectId,
+        refIds: session.focus.projectId ? [session.focus.projectId] : undefined,
+      }),
     generate: (body) => generateProject(ctx, body),
+    loadSession: (id) => loadSession(ctx.rootDir, id),
+    saveSession: (session) => saveSession(ctx.rootDir, session),
     defaultVersion: settings.defaultVersion,
   });
 }
@@ -378,6 +394,16 @@ const routes: Route[] = [
     async handle(ctx, req, res) {
       const body = (await readJsonBody(req)) as TurnBody;
       sendOk(res, await runTurn(ctx, body));
+    },
+  },
+  {
+    method: "GET",
+    match: (p) => {
+      const m = p.match(new RegExp(`^${API_PREFIX}/sessions/([^/]+)$`));
+      return m ? [decodeURIComponent(m[1])] : null;
+    },
+    async handle(ctx, _req, res, params) {
+      sendOk(res, await readSessionPublic(ctx.rootDir, params[0]));
     },
   },
   {

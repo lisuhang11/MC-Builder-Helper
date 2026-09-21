@@ -1,6 +1,7 @@
 import type { IntentBody, IntentData, IntentSlots, ProjectSummary } from "../shared/api-contract.ts";
 import { ErrorCode } from "../shared/api-contract.ts";
 import { searchProjects } from "../shared/project-search.ts";
+import { formatFocus, formatHistory, inheritIntent } from "../shared/session.ts";
 import { INTENT_LABELS, type IntentResult, isIntent } from "../shared/constants.ts";
 import type { SettingsFile } from "../shared/types.ts";
 import { HttpError } from "./http.ts";
@@ -20,11 +21,16 @@ function matchProjects(text: string, catalog: ProjectSummary[]): ProjectSummary[
   return searchProjects(catalog, text).map((h) => h.project);
 }
 
-export function classifyByRules(text: string, catalog: ProjectSummary[]): IntentData | null {
+export function classifyByRules(text: string, catalog: ProjectSummary[], focus?: IntentBody["focus"]): IntentData | null {
   const raw = text.trim();
   if (!raw) return null;
   if (GREETING.test(raw)) {
     return result("greeting", 0.99, "rule", "原文是寒暄");
+  }
+
+  if (focus?.intent) {
+    const inherited = inheritIntent(raw, focus);
+    if (inherited) return inherited;
   }
 
   const wantsGenerate = GENERATE.test(raw);
@@ -68,7 +74,7 @@ export async function classifyIntent(
     throw new HttpError(400, ErrorCode.BAD_REQUEST, "text 不能为空");
   }
 
-  const ruled = classifyByRules(text, catalog);
+  const ruled = classifyByRules(text, catalog, req.focus);
   if (ruled) return ruled;
 
   if (!settings.apiKey?.trim() || !settings.baseURL?.trim()) {
@@ -84,14 +90,15 @@ export async function classifyIntent(
 - ask_mc：问 Minecraft 知识，不要建造步骤教程
 - generate_build：用户要新生成一座建筑
 - howto_build：查已有建筑/机器怎么搭，应对齐目录里的教程
-分不清用 unclear。不要自造 intent。不要猜成 generate_build。`;
+分不清用 unclear。不要自造 intent。不要猜成 generate_build。
+有上文时，「再高一点 / 刚才那份 / 这个是什么」应承接上一轮，不要改成 unclear。`;
 
   try {
     const content = await chat(settings, [
       { role: "system", content: system },
       {
         role: "user",
-        content: `原文：${text}\n改写（可能空）：${rewritten || "无"}\n本机教程：\n${catalogLines}`,
+        content: `原文：${text}\n改写（可能空）：${rewritten || "无"}\n上文：\n${formatHistory(req.history ?? [])}\n焦点：${formatFocus(req.focus ?? {})}\n本机教程：\n${catalogLines}`,
       },
     ]);
     const parsed = extractJson(content) as {

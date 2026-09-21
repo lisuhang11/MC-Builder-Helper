@@ -3,4 +3,5 @@ dist
 dist-ssr
 *.local
 settings.json
+sessions/
 .DS_Store

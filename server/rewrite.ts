@@ -1,6 +1,7 @@
 import type { ProjectSummary, RewriteBody, RewriteData } from "../shared/api-contract.ts";
 import { JAVA_VERSIONS, coerceJavaVersion, isJavaVersion } from "../shared/constants.ts";
 import { ErrorCode } from "../shared/api-contract.ts";
+import { formatHistory } from "../shared/session.ts";
 import type { SettingsFile } from "../shared/types.ts";
 import { HttpError } from "./http.ts";
 import { assertLlmSettings, chat, extractJson } from "./llm.ts";
@@ -52,11 +53,21 @@ export async function rewriteQuery(
 - 用户写明的约束必须保留；没写的用常见默认补上，并写入 assumptions。
 - 目标版本是 Java ${targetVersion}，不要建议该版本不存在的玩法当硬要求。
 - 规模保持可教：小屋、门、简单机械；不要擅自扩成巨型城。
-- suggestedRefIds 只能从下面目录的 id 选取，不能编造。用户没指向已有工程时输出 []。`;
+- suggestedRefIds 只能从下面目录的 id 选取，不能编造。用户没指向已有工程时输出 []。
+- 若有上一份任务说明，本轮是修改：在上一份基础上改，不要另起无关建筑；suggestedRefIds 应包含上一份工程 id（若在目录里）。`;
+
+  const prev = req.previousRewritten?.trim()
+    ? `上一份任务说明：${req.previousRewritten.trim()}`
+    : "上一份任务说明：无";
+  const prevId = req.previousProjectId?.trim() || "无";
 
   const user = `原文：${original}
 目标版本：${targetVersion}
 用户已选参考 id：${hintRefs.join(", ") || "无"}
+${prev}
+上一份工程 id：${prevId}
+上文：
+${formatHistory(req.history ?? [])}
 本机工程目录：
 ${catalogLines}`;
 
@@ -79,6 +90,9 @@ ${catalogLines}`;
       : [];
     for (const id of hintRefs) {
       if (!suggestedRefIds.includes(id)) suggestedRefIds.push(id);
+    }
+    if (req.previousProjectId && known.has(req.previousProjectId) && !suggestedRefIds.includes(req.previousProjectId)) {
+      suggestedRefIds.push(req.previousProjectId);
     }
 
     const assumptions = Array.isArray(parsed.assumptions)

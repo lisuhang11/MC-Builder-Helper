@@ -158,8 +158,12 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 一轮会话入口：`POST /api/v1/query/turn`。顺序固定：
 
 ```
-原文 → 意图识别 → 按意图调工具 / 生成 → 返回答文
+原文 →（带上文）意图识别 → 按意图调工具 / 生成 → 写入会话 → 返回答文
 ```
+
+可带 `sessionId`。没有或无效则新建。服务端把最近 **16** 条消息和焦点（上一轮意图、主题、教程/工程 id、改写说明）记在本机 `sessions/<id>.json`（不进 Git）。分类、改写、生成只看最近若干轮，**不能**改播放器。
+
+指代：「再高一点」承接上一轮生成；「刚才那份 / 第一个」承接教程列表；「这个是什么」承接上一主题。
 
 意图先看**原文**（打招呼、问知识不能被改写污染）。只有 `generate_build` 才改写并进入第 10 节生成。`greeting` / `ask_mc` / `howto_build` 不改写。
 
@@ -201,7 +205,7 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 3. `confidence < 0.6` 或 `projectId` 不在目录 → `unclear`。
 4. 没有模型 key 时：规则能判就判，否则 `unclear`，不报设置错误。
 
-输入：`text`（原文）、可选 `rewritten`、工程目录。  
+输入：`text`（原文）、可选 `rewritten`、可选 `history` / `focus`、工程目录。  
 接口：`POST /api/v1/query/intent`。
 
 ### 9.3 Agent 工具（只读）
@@ -228,7 +232,7 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 
 ### 9.4 一轮会话（`query/turn`）
 
-输入：`text`、可选 `version`（缺省用设置里的默认版本）。
+输入：`text`、可选 `version`（缺省用设置里的默认版本）、可选 `sessionId`。
 
 | 意图 | 本轮做什么 | 答文 |
 | --- | --- | --- |
@@ -238,9 +242,9 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 | `generate_build` | 改写 → 第 10 节生成 | 成功则给新工程 id 与 `playPath`；失败不写盘，把错误说给用户 |
 | `unclear` | 不调工具 | 只追问一句 |
 
-输出：`{ intent, reply, toolsUsed, skill?, wiki?, mods?, tutorials?, tutorial?, generate?, web?, playPath? }`。前端「对话」页只认这一包。百科/工具失败写进 `reply`，尽量仍返回 200。
+输出：`{ sessionId, intent, reply, toolsUsed, skill?, wiki?, mods?, tutorials?, tutorial?, generate?, rewrite?, issues?, web?, playPath?, version? }`。前端「对话」页只认这一包，并回传 `sessionId`。生成失败把校验 `issues` 放进本包（尽量仍 200），不写盘。百科/工具失败写进 `reply`。
 
-`query/turn` 可带 `skill`（强制走某条 skill）或 `webSearch: true`（本轮只联网搜索）。
+`query/turn` 可带 `skill`（强制走某条 skill）或 `webSearch: true`（本轮只联网搜索）。`GET /api/v1/sessions/:id` 取回消息以便刷新后接上。对话页提供「新对话」。
 
 ### 9.5 Skill 与 Tool
 
@@ -277,7 +281,7 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 ## 11. 播放器 UI
 
 - 首页：列出 `projects/`；顶部搜索栏按标题、说明、id 过滤已有教程；入口「对话」。
-- 对话页：消息在上，Skill 条贴在输入框上方，联网搜索在输入旁。没有单独的生成页；旧路径 `/generate` 转到对话。
+- 对话页：消息在上，Skill 条贴在输入框上方（含本轮 Java 版本），联网搜索在输入旁；「新对话」清会话。多份教程可点选；生成成功列出改写假设，失败列出校验错误。没有单独的生成页；旧路径 `/generate` 转到对话。
 - 播放页：3D 场景 + 组时间轴（上一组 / 下一组，组内可展开逐步）。
 - **未做到的组不显示**（避免完整形态剧透）；当前组新放置方块高亮。
 - 相机：轨道旋转与缩放，Y 向上，格点对齐。
@@ -326,6 +330,7 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
   server/              本机 API、校验、注册表、生成
   shared/              IR 类型与纯函数（前后端共用）
   skills/<id>/SKILL.md Skill 说明书
+  sessions/<id>.json   本机会话（gitignore）
 ```
 
 ## 16. 非功能
@@ -358,7 +363,8 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 | GET | `/api/v1/projects/:id` | 200 / 404 | `{ project, steps }` |
 | POST | `/api/v1/query/rewrite` | 200 / 400 / 502 | `{ original, rewritten, assumptions, suggestedRefIds, titleHint? }`；body：`{ text, version?, refIds? }` |
 | POST | `/api/v1/query/intent` | 200 / 400 | `{ intent, confidence, source, reason, slots }`；body：`{ text, rewritten? }` |
-| POST | `/api/v1/query/turn` | 200 / 400 | `{ intent, reply, toolsUsed, skill?, wiki?, tutorials?, tutorial?, generate?, web?, playPath? }`；body：`{ text, version?, skill?, webSearch? }` |
+| POST | `/api/v1/query/turn` | 200 / 400 | `{ sessionId, intent, reply, toolsUsed, skill?, wiki?, tutorials?, tutorial?, generate?, rewrite?, issues?, web?, playPath?, version? }`；body：`{ text, version?, skill?, webSearch?, sessionId? }` |
+| GET | `/api/v1/sessions/:id` | 200 / 404 | `{ id, messages, focus, createdAt, updatedAt }` |
 | GET | `/api/v1/skills` | 200 | `{ items: AgentSkill[] }` |
 | GET | `/api/v1/tools` | 200 | `{ items: AgentToolDef[] }` |
 | POST | `/api/v1/tools/lookup_mc_wiki` | 200 / 400 / 502 | `{ query, source, items }`；body：`{ query }` |
