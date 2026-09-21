@@ -216,3 +216,52 @@ textarea {
   color: #d7c89a;
   margin-top: 0.5rem;
 }
+
+.chat {
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 6.5rem);
+}
+
+.chat-log {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.bubble {
+  max-width: 92%;
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #4a3f2c;
+  background: #242018;
+}
+
+.bubble.user {
+  align-self: flex-end;
+  background: #2e3a18;
+  border-color: #5a7a28;
+}
+
+.bubble.assistant {
+  align-self: flex-start;
+}
+
+.chat-compose {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.chat-compose textarea {
+  min-height: 4.2rem;
+  margin: 0;
+}
+
+.chat-compose .btn {
+  margin-top: 0;
+  flex-shrink: 0;
+}

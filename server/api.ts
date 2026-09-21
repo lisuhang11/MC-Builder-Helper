@@ -12,8 +12,10 @@ import {
   type SettingsWriteBody,
   type GetTutorialBody,
   type TutorialSearchBody,
+  type TurnBody,
   type WikiLookupBody,
 } from "../shared/api-contract.ts";
+import { handleTurn } from "./turn.ts";
 import { AGENT_TOOLS } from "../shared/agent-tools.ts";
 import { classifyIntent } from "./intent.ts";
 import { rewriteQuery } from "./rewrite.ts";
@@ -192,6 +194,19 @@ export async function runGetTutorial(ctx: ApiContext, id: string) {
   return getTutorial(await listProjects(ctx), id, (pid) => loadProject(ctx, pid));
 }
 
+export async function runTurn(ctx: ApiContext, req: TurnBody) {
+  const settings = await readSettings(ctx);
+  return handleTurn(req, {
+    classify: async (text) => classifyIntent(settings, await listProjects(ctx), { text }),
+    searchTutorials: (query) => runSearchTutorials(ctx, query),
+    getTutorial: (id) => runGetTutorial(ctx, id),
+    lookupWiki: (query) => lookupMcWiki(query),
+    rewrite: (text, version) => runRewrite(ctx, { text, version }),
+    generate: (body) => generateProject(ctx, body),
+    defaultVersion: settings.defaultVersion,
+  });
+}
+
 export async function generateProject(ctx: ApiContext, req: GenerateBody) {
   const description = req.description?.trim() ?? "";
   if (!description) {
@@ -329,6 +344,14 @@ const routes: Route[] = [
   },
   {
     method: "POST",
+    match: (p) => (p === `${API_PREFIX}/query/turn` ? [] : null),
+    async handle(ctx, req, res) {
+      const body = (await readJsonBody(req)) as TurnBody;
+      sendOk(res, await runTurn(ctx, body));
+    },
+  },
+  {
+    method: "POST",
     match: (p) => (p === `${API_PREFIX}/query/rewrite` ? [] : null),
     async handle(ctx, req, res) {
       const body = (await readJsonBody(req)) as RewriteBody;
@@ -336,19 +359,13 @@ const routes: Route[] = [
     },
   },
   {
-    method: "POST",
-    match: (p) => (p === `${API_PREFIX}/projects/generate` ? [] : null),
-    async handle(ctx, req, res) {
-      const body = (await readJsonBody(req)) as GenerateBody;
-      const data = await generateProject(ctx, body);
-      sendOk(res, data, 201);
-    },
-  },
-  {
     method: "GET",
     match: (p) => {
       const m = p.match(new RegExp(`^${API_PREFIX}/projects/([^/]+)$`));
-      return m ? [decodeURIComponent(m[1])] : null;
+      if (!m) return null;
+      const id = decodeURIComponent(m[1]);
+      if (id === "generate") return null;
+      return [id];
     },
     async handle(ctx, _req, res, params) {
       sendOk(res, await loadProject(ctx, params[0]));

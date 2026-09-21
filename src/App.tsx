@@ -1,8 +1,8 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { Navigate, NavLink, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage.tsx";
 import PlayerPage from "./pages/PlayerPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
-import GeneratePage from "./pages/GeneratePage.tsx";
+import ChatPage from "./pages/ChatPage.tsx";
 
 export default function App() {
   return (
@@ -13,15 +13,16 @@ export default function App() {
         </NavLink>
         <nav>
           <NavLink to="/">教程</NavLink>
-          <NavLink to="/generate">生成建筑</NavLink>
+          <NavLink to="/chat">对话</NavLink>
           <NavLink to="/settings">设置</NavLink>
         </nav>
       </header>
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/chat" element={<ChatPage />} />
           <Route path="/play/:id" element={<PlayerPage />} />
-          <Route path="/generate" element={<GeneratePage />} />
+          <Route path="/generate" element={<Navigate to="/chat" replace />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </main>

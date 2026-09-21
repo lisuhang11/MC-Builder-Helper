@@ -11,7 +11,7 @@
 - 播放内置教程：下界传送门、末地传送门、简易刷石机
 - 按组前进，未做到的组先不显示；材料显示中文名
 - 经典 Java 版本：`1.7.10`、`1.8`、`1.12`、`1.16`、`1.20`
-- 用自然语言生成一座建筑：先查询改写，再经 OpenAI 兼容接口出 IR，只接受校验过的 JSON 工程
+- 在对话里用自然语言生成一座建筑：先改写，再经 OpenAI 兼容接口出 IR，只接受校验过的 JSON 工程
 
 ## 运行
 
@@ -26,7 +26,7 @@ npm run dev
 
 浏览器打开终端里的地址（默认 `http://localhost:5173`）。
 
-生成建筑前到「设置」填写：
+在对话里生成建筑前，到「设置」填写：
 
 - `baseURL`（OpenAI 兼容，例如 `https://api.openai.com/v1`）
 - `apiKey`
@@ -55,11 +55,11 @@ npm run dev
 | GET | `/api/v1/projects/:id` |
 | POST | `/api/v1/query/rewrite` |
 | POST | `/api/v1/query/intent` |
+| POST | `/api/v1/query/turn` |
 | GET | `/api/v1/tools` |
 | POST | `/api/v1/tools/lookup_mc_wiki` |
 | POST | `/api/v1/tools/search_tutorials` |
 | POST | `/api/v1/tools/get_tutorial` |
-| POST | `/api/v1/projects/generate` |
 | GET / PUT | `/api/v1/settings` |
 | GET | `/api/v1/versions` |
 | GET | `/api/v1/versions/:version/blocks` |

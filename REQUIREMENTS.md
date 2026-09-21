@@ -15,7 +15,7 @@
 作者或学习者在本机启动一个 Node 进程，浏览器打开页面：
 
 - 从 `projects/` 打开一座建筑教程，按组播放，查看材料和版本可用性。
-- 用自然语言让大模型生成一座建筑；先查询改写，再（下一刀）意图识别，最后模型只输出建造 IR，本地校验通过后落盘，再用同一播放器打开。
+- 用自然语言在对话里生成一座建筑；先意图识别，再查询改写，模型只输出建造 IR，本地校验通过后落盘，再用同一播放器打开。
 - 已有工程可作为生成时的参考模板（refs），不另做一套格式。
 
 语言：**简体中文（zh-CN）**。
@@ -25,7 +25,7 @@
 ### 3.1 第一刀（必须交付）
 
 - 人手编写的 **下界传送门** 工程可逐步播放。
-- 「根据一句中文生成一座小木屋」→ 查询改写 → 校验 → 写入 `projects/` → 同一播放器打开。
+- 对话里「根据一句中文生成一座小木屋」→ 改写 → 校验 → 写入 `projects/` → 同一播放器打开。不设单独的生成页。
 - 版本下拉：Java 经典档 `1.7.10` / `1.8` / `1.12` / `1.16` / `1.20`。
 - 材料表：本组 + 累计，由步骤派生，不入库。
 - 本机设置：API key、baseURL、model、默认版本，存 `settings.json`（不进 Git）。
@@ -155,13 +155,13 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 
 ## 9. 查询理解（生成之前）
 
-会话接入的前两级，**不写盘、不改播放器**。顺序固定：
+一轮会话入口：`POST /api/v1/query/turn`。顺序固定：
 
 ```
-原文 → 查询改写 → 意图识别 →（仅 generate_build 才进入第 10 节生成）
+原文 → 意图识别 → 按意图调工具 / 生成 → 返回答文
 ```
 
-意图先看**原文**（打招呼、问知识不能被改写污染），再参考改写结果和工程目录。禁止只拿改写文分类。
+意图先看**原文**（打招呼、问知识不能被改写污染）。只有 `generate_build` 才改写并进入第 10 节生成。`greeting` / `ask_mc` / `howto_build` 不改写。
 
 ### 9.1 查询改写（本刀交付）
 
@@ -206,7 +206,7 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 
 ### 9.3 Agent 工具（只读）
 
-模型可以调工具，但**不能改播放器、不能写盘**。本刀只交付两个：
+模型可以调工具，但**不能改播放器**。写盘只允许经过生成器。已交付：
 
 | 工具名 | 用途 | 数据从哪来 |
 | --- | --- | --- |
@@ -220,7 +220,21 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 
 `get_tutorial`：输入 `id`（工程 id，或「末地门」这种能唯一对上的名称）。输出 `{ id, project, steps, playPath }`。找不到或对上多份且分不出主次 → `NOT_FOUND`。先 `search_tutorials` 再对本条 `get_tutorial`。
 
-接口：`GET /api/v1/tools` 列出工具 schema；`POST /api/v1/tools/:name` 执行。`ask_mc` 应调百科，`howto_build` 应先搜再取全文。禁止再增加改 IR / 改网格的工具。
+接口：`GET /api/v1/tools` 列出工具 schema；`POST /api/v1/tools/:name` 执行。禁止再增加改 IR / 改网格的工具。
+
+### 9.4 一轮会话（`query/turn`）
+
+输入：`text`、可选 `version`（缺省用设置里的默认版本）。
+
+| 意图 | 本轮做什么 | 答文 |
+| --- | --- | --- |
+| `greeting` | 不调工具 | 回礼，说明能查教程、问知识、生成建筑 |
+| `ask_mc` | `lookup_mc_wiki` | 用百科摘要回答，附链接 |
+| `howto_build` | `search_tutorials`；唯一命中再 `get_tutorial` | 步骤组大纲 + `playPath`；多份则列出 id 让用户收窄；没有则说明库中没有 |
+| `generate_build` | 改写 → 第 10 节生成 | 成功则给新工程 id 与 `playPath`；失败不写盘，把错误说给用户 |
+| `unclear` | 不调工具 | 只追问一句 |
+
+输出：`{ intent, reply, toolsUsed, wiki?, tutorials?, tutorial?, generate?, playPath? }`。前端「对话」页只认这一包。百科/工具失败写进 `reply`，尽量仍返回 200。
 
 ## 10. 大模型生成
 
@@ -240,7 +254,8 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 
 ## 11. 播放器 UI
 
-- 首页：列出 `projects/`；顶部搜索栏按标题、说明、id 过滤已有教程；入口「生成建筑」（描述、目标版本、可选 refs）。
+- 首页：列出 `projects/`；顶部搜索栏按标题、说明、id 过滤已有教程；入口「对话」。
+- 对话页：输入一句中文，走 `query/turn`（查教程、问知识、生成建筑），可跳到播放器。没有单独的生成页；旧路径 `/generate` 转到对话。
 - 播放页：3D 场景 + 组时间轴（上一组 / 下一组，组内可展开逐步）。
 - **未做到的组不显示**（避免完整形态剧透）；当前组新放置方块高亮。
 - 相机：轨道旋转与缩放，Y 向上，格点对齐。
@@ -320,11 +335,11 @@ IR **永远**写扁平化后的 Java 名（例如 `minecraft:oak_planks`）。�
 | GET | `/api/v1/projects/:id` | 200 / 404 | `{ project, steps }` |
 | POST | `/api/v1/query/rewrite` | 200 / 400 / 502 | `{ original, rewritten, assumptions, suggestedRefIds, titleHint? }`；body：`{ text, version?, refIds? }` |
 | POST | `/api/v1/query/intent` | 200 / 400 | `{ intent, confidence, source, reason, slots }`；body：`{ text, rewritten? }` |
+| POST | `/api/v1/query/turn` | 200 / 400 | `{ intent, reply, toolsUsed, wiki?, tutorials?, tutorial?, generate?, playPath? }`；body：`{ text, version? }` |
 | GET | `/api/v1/tools` | 200 | `{ items: AgentToolDef[] }` |
 | POST | `/api/v1/tools/lookup_mc_wiki` | 200 / 400 / 502 | `{ query, source, items }`；body：`{ query }` |
 | POST | `/api/v1/tools/search_tutorials` | 200 / 400 | `{ query, items }`；body：`{ query }` |
 | POST | `/api/v1/tools/get_tutorial` | 200 / 400 / 404 | `{ id, project, steps, playPath }`；body：`{ id }` |
-| POST | `/api/v1/projects/generate` | 201 / 400 / 422 / 502 | `{ id, attempts, rewrite }`；body：`{ description, version, refIds?, skipRewrite? }` |
 | GET | `/api/v1/settings` | 200 | `{ baseURL, model, defaultVersion, hasApiKey }`（永不回传 apiKey） |
 | PUT | `/api/v1/settings` | 200 / 400 | 同上；body 可含 `apiKey`，空字符串表示不改 |
 | GET | `/api/v1/versions` | 200 | `{ edition: "java", versions: [...] }` |

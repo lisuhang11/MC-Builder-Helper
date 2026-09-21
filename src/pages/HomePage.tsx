@@ -19,7 +19,11 @@ export default function HomePage() {
   return (
     <section>
       <h1>教程</h1>
-      <p className="muted">打开一座建筑，按组逐步搭建。生成结果也会出现在这里。</p>
+      <p className="muted">
+        打开一座建筑，按组逐步搭建。想新做一座，去
+        <Link to="/chat">对话</Link>
+        里说。
+      </p>
       <label htmlFor="tutorial-search">搜索教程</label>
       <input
         id="tutorial-search"

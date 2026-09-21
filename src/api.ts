@@ -1,4 +1,4 @@
-import { API_PREFIX, type ApiEnvelope, type GenerateBody, type GenerateData, type GetTutorialData, type IntentBody, type IntentData, type ProjectListData, type RewriteBody, type RewriteData, type SettingsPublic, type SettingsWriteBody, type TextureStatusData, type TutorialSearchData, type VersionBlocksData, type VersionsData, type WikiLookupData } from "@shared/api-contract.ts";
+import { API_PREFIX, type ApiEnvelope, type GetTutorialData, type ProjectListData, type SettingsPublic, type SettingsWriteBody, type TextureStatusData, type TutorialSearchData, type TurnBody, type TurnData, type VersionBlocksData, type VersionsData, type WikiLookupData } from "@shared/api-contract.ts";
 import type { AgentToolDef } from "@shared/agent-tools.ts";
 import type { ProjectBundle, ValidationIssue } from "@shared/types.ts";
 
@@ -66,16 +66,8 @@ export function saveSettings(body: SettingsWriteBody) {
   return request<SettingsPublic>("/settings", jsonInit("PUT", body));
 }
 
-export function generateBuild(body: GenerateBody) {
-  return request<GenerateData>("/projects/generate", jsonInit("POST", body));
-}
-
-export function rewriteQuery(body: RewriteBody) {
-  return request<RewriteData>("/query/rewrite", jsonInit("POST", body));
-}
-
-export function classifyIntent(body: IntentBody) {
-  return request<IntentData>("/query/intent", jsonInit("POST", body));
+export function sendTurn(body: TurnBody) {
+  return request<TurnData>("/query/turn", jsonInit("POST", body));
 }
 
 export function fetchAgentTools() {

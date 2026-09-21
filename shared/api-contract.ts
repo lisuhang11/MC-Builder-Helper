@@ -144,6 +144,23 @@ export type GetTutorialData = {
   playPath: string;
 };
 
+export type TurnBody = {
+  text: string;
+  version?: string;
+};
+
+export type TurnData = {
+  intent: IntentData["intent"];
+  reason: string;
+  reply: string;
+  toolsUsed: string[];
+  wiki?: WikiLookupData;
+  tutorials?: TutorialSearchData;
+  tutorial?: GetTutorialData;
+  generate?: GenerateData;
+  playPath?: string;
+};
+
 export type VersionsData = { edition: "java"; versions: string[] };
 
 export type VersionBlocksData = { edition: "java"; version: string; blocks: string[] };
